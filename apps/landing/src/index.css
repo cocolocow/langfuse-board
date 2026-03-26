@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl border border-border bg-surface/80 backdrop-blur-sm;
+    background: linear-gradient(
+      135deg,
+      rgba(15, 15, 26, 0.9) 0%,
+      rgba(22, 22, 37, 0.6) 100%
+    );
+  }
+
+  .glass-card:hover {
+    border-color: rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.05);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.15),
+      0 0 80px rgba(99, 102, 241, 0.05);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
