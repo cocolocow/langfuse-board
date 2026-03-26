@@ -1,0 +1,143 @@
+import type {
+  LangfuseMetricsQuery,
+  LangfuseMetricsResponse,
+} from "@langfuse-board/shared";
+import type { LangfuseClient } from "./client.js";
+
+function randomBetween(min: number, max: number): number {
+  return Math.round((Math.random() * (max - min) + min) * 100) / 100;
+}
+
+function generateDailyData(
+  from: string,
+  to: string,
+  baseValue: number,
+  variance: number,
+): { time: string; value: number }[] {
+  const start = new Date(from);
+  const end = new Date(to);
+  const days: { time: string; value: number }[] = [];
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    days.push({
+      time: d.toISOString().split("T")[0]!,
+      value: randomBetween(baseValue - variance, baseValue + variance),
+    });
+  }
+  return days;
+}
+
+function handleQuery(query: LangfuseMetricsQuery): LangfuseMetricsResponse {
+  const dims = query.dimensions?.map((d) => d.field) ?? [];
+  const metrics = query.metrics.map((m) => `${m.aggregation}_${m.measure}`);
+  const hasTime = !!query.timeDimension;
+
+  // Cost total
+  if (query.view === "traces" && metrics.includes("sum_totalCost") && metrics.includes("count_count") && !hasTime && dims.length === 0) {
+    return {
+      data: [{ sum_totalCost: 2847.32, count: 18420, sum_totalTokens: 45200000 }],
+    };
+  }
+
+  // Cost trend
+  if (query.view === "traces" && metrics.includes("sum_totalCost") && hasTime && dims.length === 0) {
+    const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 95, 35);
+    return { data: days.map((d) => ({ time: d.time, sum_totalCost: d.value })) };
+  }
+
+  // Traces trend
+  if (query.view === "traces" && metrics.includes("count_count") && hasTime && dims.length === 0) {
+    const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 600, 200);
+    return { data: days.map((d) => ({ time: d.time, count: Math.round(d.value) })) };
+  }
+
+  // Tokens trend
+  if (query.view === "traces" && metrics.includes("sum_totalTokens") && hasTime) {
+    const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 1500000, 500000);
+    return { data: days.map((d) => ({ time: d.time, sum_totalTokens: Math.round(d.value) })) };
+  }
+
+  // Latency (non-trend)
+  if (query.view === "traces" && metrics.includes("average_latency") && !hasTime) {
+    return {
+      data: [{ average_latency: 1340, p95_latency: 4200 }],
+    };
+  }
+
+  // Latency trend
+  if (query.view === "traces" && metrics.includes("average_latency") && hasTime) {
+    const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 1300, 400);
+    return {
+      data: days.map((d) => ({
+        time: d.time,
+        average_latency: d.value,
+        p95_latency: d.value * 2.8,
+      })),
+    };
+  }
+
+  // Cost by model
+  if (query.view === "observations" && dims.includes("providedModelName") && metrics.includes("sum_totalCost")) {
+    return {
+      data: [
+        { providedModelName: "claude-sonnet-4-20250514", sum_totalCost: 1250.40, sum_totalTokens: 18500000, count: 8200 },
+        { providedModelName: "gpt-4o", sum_totalCost: 890.20, sum_totalTokens: 12300000, count: 5100 },
+        { providedModelName: "gpt-4o-mini", sum_totalCost: 420.15, sum_totalTokens: 28400000, count: 12500 },
+        { providedModelName: "claude-haiku-4-5-20251001", sum_totalCost: 186.57, sum_totalTokens: 32100000, count: 15200 },
+        { providedModelName: "gemini-2.0-flash", sum_totalCost: 100.00, sum_totalTokens: 8900000, count: 3400 },
+      ],
+    };
+  }
+
+  // Cost by trace name
+  if (query.view === "traces" && dims.includes("name") && metrics.includes("sum_totalCost")) {
+    return {
+      data: [
+        { name: "chat-completion", sum_totalCost: 1420.50, sum_totalTokens: 28000000 },
+        { name: "document-qa", sum_totalCost: 680.30, sum_totalTokens: 12000000 },
+        { name: "summarize", sum_totalCost: 410.20, sum_totalTokens: 8500000 },
+        { name: "code-review", sum_totalCost: 220.15, sum_totalTokens: 5200000 },
+        { name: "translate", sum_totalCost: 116.17, sum_totalTokens: 3100000 },
+      ],
+    };
+  }
+
+  // Usage by user
+  if (query.view === "traces" && dims.includes("userId")) {
+    return {
+      data: [
+        { userId: "alice@company.com", count: 3200, sum_totalCost: 680.40 },
+        { userId: "bob@company.com", count: 2800, sum_totalCost: 520.30 },
+        { userId: "charlie@company.com", count: 1950, sum_totalCost: 410.15 },
+        { userId: "diana@company.com", count: 1600, sum_totalCost: 340.20 },
+        { userId: "eve@company.com", count: 1200, sum_totalCost: 280.10 },
+        { userId: "frank@company.com", count: 980, sum_totalCost: 195.50 },
+        { userId: "grace@company.com", count: 750, sum_totalCost: 160.30 },
+        { userId: "henry@company.com", count: 520, sum_totalCost: 130.20 },
+      ],
+    };
+  }
+
+  // Scores
+  if (query.view === "scores-numeric") {
+    return {
+      data: [
+        { name: "helpfulness", average_value: 0.87, count: 4200 },
+        { name: "accuracy", average_value: 0.92, count: 3800 },
+        { name: "relevance", average_value: 0.84, count: 4100 },
+      ],
+    };
+  }
+
+  return { data: [] };
+}
+
+export function createMockLangfuseClient(): LangfuseClient {
+  return {
+    queryMetrics: async (query: LangfuseMetricsQuery) => {
+      await new Promise((r) => setTimeout(r, randomBetween(50, 200)));
+      return handleQuery(query);
+    },
+    healthCheck: async () => true,
+  } as LangfuseClient;
+}

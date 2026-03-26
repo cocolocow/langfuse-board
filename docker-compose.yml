@@ -1,0 +1,10 @@
+services:
+  langfuse-board:
+    build: .
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      - API_PORT=3001
+    restart: unless-stopped
