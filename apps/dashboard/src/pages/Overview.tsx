@@ -8,7 +8,7 @@ export function Overview() {
   const { data, isLoading, error } = useOverview();
 
   if (isLoading) return <Loader />;
-  if (error) return <ErrorState message={error.message} />;
+  if (error) return <ErrorState error={error} />;
   if (!data) return null;
 
   const kpis = [data.kpis.totalCost, data.kpis.totalTraces, data.kpis.avgLatency, data.kpis.errorRate];

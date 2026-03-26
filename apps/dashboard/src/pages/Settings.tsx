@@ -126,7 +126,7 @@ export function Settings() {
         </p>
 
         {diagLoading && <Loader />}
-        {diagError && <ErrorState message={diagError.message} />}
+        {diagError && <ErrorState error={diagError} />}
 
         {diagnostic && (
           <>

@@ -9,7 +9,7 @@ export function Quality() {
   const { data, isLoading, error } = useQuality();
 
   if (isLoading) return <Loader />;
-  if (error) return <ErrorState message={error.message} />;
+  if (error) return <ErrorState error={error} />;
   if (!data) return null;
 
   return (

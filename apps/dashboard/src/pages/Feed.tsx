@@ -22,7 +22,7 @@ export function Feed() {
   const { data: config } = useConfig();
 
   if (isLoading) return <Loader />;
-  if (error) return <ErrorState message={error.message} />;
+  if (error) return <ErrorState error={error} />;
   if (!data) return null;
 
   const feedDimensions = config?.dimensions.filter((d) => d.show.includes("feed")) ?? [];

@@ -48,7 +48,7 @@ export function Costs() {
   const { data: config } = useConfig();
 
   if (isLoading) return <Loader />;
-  if (error) return <ErrorState message={error.message} />;
+  if (error) return <ErrorState error={error} />;
   if (!data) return null;
 
   const breakdownDimensions =
