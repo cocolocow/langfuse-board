@@ -91,7 +91,9 @@ export function Pricing() {
             </ul>
 
             <a
-              href="mailto:hello@langfuse-board.io?subject=Cloud%20Waitlist"
+              href="https://tally.so/r/BzZ2RA"
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl border border-accent/30 bg-accent-dim px-6 py-3 font-semibold text-accent-light transition hover:bg-accent/20"
             >
               Join waitlist

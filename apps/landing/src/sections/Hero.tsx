@@ -39,7 +39,9 @@ export function Hero() {
             Star on GitHub
           </a>
           <a
-            href="#pricing"
+            href="https://tally.so/r/BzZ2RA"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent-dim px-6 py-3 font-semibold text-accent-light transition hover:bg-accent/20"
           >
             Try Cloud
