@@ -24,7 +24,8 @@ export function Loader() {
 }
 
 export function ErrorState({ message, error }: { message?: string; error?: Error | null }) {
-  const isRateLimit = error instanceof RateLimitError || message?.includes("429") || message?.includes("rate");
+  const msg = message ?? error?.message ?? "";
+  const isRateLimit = error instanceof RateLimitError || msg.includes("429") || msg.toLowerCase().includes("rate limit");
 
   if (isRateLimit) {
     return (
