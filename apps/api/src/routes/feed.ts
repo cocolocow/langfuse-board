@@ -78,7 +78,7 @@ export function createFeedRoutes(
     });
 
     const response: FeedResponse = { items };
-    cache.set(cacheKey, response, 10_000);
+    cache.set(cacheKey, response, 300_000);
 
     return c.json(response);
   });

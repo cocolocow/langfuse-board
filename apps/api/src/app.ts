@@ -32,7 +32,7 @@ export function createApp({ langfuse, cache, boardConfig }: AppDeps) {
   app.route("/api/usage", createUsageRoutes(langfuse, cache));
   app.route("/api/quality", createQualityRoutes(langfuse, cache));
   app.route("/api/feed", createFeedRoutes(langfuse, cache, boardConfig));
-  app.route("/api/config", createConfigRoutes(langfuse, boardConfig));
+  app.route("/api/config", createConfigRoutes(langfuse, boardConfig, cache));
   app.route("/api/breakdown", createBreakdownRoutes(langfuse, cache, boardConfig));
   app.route("/api/health", createHealthRoutes(langfuse, cache));
 

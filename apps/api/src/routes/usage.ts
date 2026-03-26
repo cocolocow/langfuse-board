@@ -61,7 +61,7 @@ export function createUsageRoutes(
     let topUsers: TopUser[] = [];
     let activeUsersCount = 0;
     try {
-      const traces = await langfuse.listTraces(200);
+      const traces = await langfuse.listTraces(100);
       const userMap = new Map<string, { traces: number; cost: number }>();
       for (const trace of traces.data) {
         if (!trace.userId) continue;

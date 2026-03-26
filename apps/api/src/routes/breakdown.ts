@@ -110,7 +110,7 @@ async function breakdownByMetadata(
   from: string,
   to: string,
 ): Promise<BreakdownItem[]> {
-  const traces = await langfuse.listTraces(500);
+  const traces = await langfuse.listTraces(100);
 
   const fromDate = new Date(from).getTime();
   const toDate = new Date(to).getTime();

@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import type { LangfuseClient } from "../langfuse/client.js";
-import type { BoardConfig } from "@langfuse-board/shared";
+import type { CacheStore } from "../cache/store.js";
+import type { BoardConfig, DiagnosticResponse } from "@langfuse-board/shared";
 import { extractDiagnosticFields } from "../config/diagnostic.js";
 
 export function createConfigRoutes(
   langfuse: LangfuseClient,
   boardConfig: BoardConfig,
+  cache: CacheStore,
 ) {
   const app = new Hono();
 
@@ -14,8 +16,16 @@ export function createConfigRoutes(
   });
 
   app.get("/diagnostic", async (c) => {
-    const traces = await langfuse.listTraces(200);
+    const cacheKey = "config:diagnostic";
+
+    const cached = cache.get<DiagnosticResponse>(cacheKey);
+    if (cached) return c.json(cached);
+
+    const traces = await langfuse.listTraces(100);
     const diagnostic = extractDiagnosticFields(traces.data, boardConfig);
+
+    cache.set(cacheKey, diagnostic, 1_800_000);
+
     return c.json(diagnostic);
   });
 
