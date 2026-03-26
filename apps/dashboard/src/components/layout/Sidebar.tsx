@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, DollarSign, Users, Activity, Radio, Zap } from "lucide-react";
+import { LayoutDashboard, DollarSign, Users, Activity, Radio, Settings, Zap } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -7,6 +7,7 @@ const navItems = [
   { href: "/usage", label: "Usage", icon: Users },
   { href: "/quality", label: "Performance", icon: Activity },
   { href: "/live", label: "Live", icon: Radio },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
