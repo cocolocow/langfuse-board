@@ -68,7 +68,7 @@ export function latencyQuery(p: QueryParams): LangfuseMetricsQuery {
   return {
     view: "traces",
     metrics: [
-      { measure: "latency", aggregation: "average" },
+      { measure: "latency", aggregation: "avg" },
       { measure: "latency", aggregation: "p95" },
     ],
     fromTimestamp: p.from,
@@ -80,7 +80,7 @@ export function latencyTrendQuery(p: QueryParams): LangfuseMetricsQuery {
   return {
     view: "traces",
     metrics: [
-      { measure: "latency", aggregation: "average" },
+      { measure: "latency", aggregation: "avg" },
       { measure: "latency", aggregation: "p95" },
     ],
     timeDimension: { granularity: p.granularity ?? "day" },
@@ -132,7 +132,7 @@ export function scoresQuery(p: QueryParams): LangfuseMetricsQuery {
     view: "scores-numeric",
     dimensions: [{ field: "name" }],
     metrics: [
-      { measure: "value", aggregation: "average" },
+      { measure: "value", aggregation: "avg" },
       { measure: "count", aggregation: "count" },
     ],
     fromTimestamp: p.from,

@@ -3,19 +3,19 @@ import { createTestApp, defaultQuery, queryKey } from "./helpers.js";
 import type { LangfuseMetricsResponse } from "@langfuse-board/shared";
 
 const mockData: Record<string, LangfuseMetricsResponse> = {
-  "traces:none:average_latency,p95_latency": {
-    data: [{ average_latency: 1200, p95_latency: 3500 }],
+  "traces:none:avg_latency,p95_latency": {
+    data: [{ avg_latency: 1200, p95_latency: 3500 }],
   },
-  "traces:none:average_latency,p95_latency_t:day": {
+  "traces:none:avg_latency,p95_latency_t:day": {
     data: [
-      { time: "2024-01-01", average_latency: 1000, p95_latency: 3000 },
-      { time: "2024-01-02", average_latency: 1400, p95_latency: 4000 },
+      { time: "2024-01-01", avg_latency: 1000, p95_latency: 3000 },
+      { time: "2024-01-02", avg_latency: 1400, p95_latency: 4000 },
     ],
   },
-  "scores-numeric:name:average_value,count_count": {
+  "scores-numeric:name:avg_value,count_count": {
     data: [
-      { name: "helpfulness", average_value: 0.85, count: 200 },
-      { name: "accuracy", average_value: 0.92, count: 180 },
+      { name: "helpfulness", avg_value: 0.85, count: 200 },
+      { name: "accuracy", avg_value: 0.92, count: 180 },
     ],
   },
 };

@@ -44,7 +44,7 @@ export function createOverviewRoutes(
 
     const totalCostValue = sumMetric(costTotal, "sum_totalCost");
     const totalTracesValue = sumMetric(costTotal, "count");
-    const avgLatencyValue = firstMetric(latency, "average_latency");
+    const avgLatencyValue = firstMetric(latency, "avg_latency");
     const p95LatencyValue = firstMetric(latency, "p95_latency");
 
     const response: OverviewResponse = {

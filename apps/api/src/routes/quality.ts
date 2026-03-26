@@ -40,12 +40,12 @@ export function createQualityRoutes(
       langfuse.queryMetrics(scoresQuery(params)),
     ]);
 
-    const avgLatencyValue = firstMetric(latency, "average_latency");
+    const avgLatencyValue = firstMetric(latency, "avg_latency");
     const p95LatencyValue = firstMetric(latency, "p95_latency");
 
     const scoreSummaries: ScoreSummary[] = scores.data.map((row) => ({
       name: String(row["name"] ?? "unknown"),
-      avg: Number(row["average_value"]) || 0,
+      avg: Number(row["avg_value"]) || 0,
       count: Number(row["count"]) || 0,
     }));
 
@@ -71,7 +71,7 @@ export function createQualityRoutes(
         unit: "percent",
         trend: null,
       },
-      latencyTrend: toTimeseries(latencyTrend, "average_latency"),
+      latencyTrend: toTimeseries(latencyTrend, "avg_latency"),
       latencyByModel: {},
       scores: scoreSummaries,
     };

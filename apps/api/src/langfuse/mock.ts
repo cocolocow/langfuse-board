@@ -58,19 +58,19 @@ function handleQuery(query: LangfuseMetricsQuery): LangfuseMetricsResponse {
   }
 
   // Latency (non-trend)
-  if (query.view === "traces" && metrics.includes("average_latency") && !hasTime) {
+  if (query.view === "traces" && metrics.includes("avg_latency") && !hasTime) {
     return {
-      data: [{ average_latency: 1340, p95_latency: 4200 }],
+      data: [{ avg_latency: 1340, p95_latency: 4200 }],
     };
   }
 
   // Latency trend
-  if (query.view === "traces" && metrics.includes("average_latency") && hasTime) {
+  if (query.view === "traces" && metrics.includes("avg_latency") && hasTime) {
     const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 1300, 400);
     return {
       data: days.map((d) => ({
         time: d.time,
-        average_latency: d.value,
+        avg_latency: d.value,
         p95_latency: d.value * 2.8,
       })),
     };
@@ -122,9 +122,9 @@ function handleQuery(query: LangfuseMetricsQuery): LangfuseMetricsResponse {
   if (query.view === "scores-numeric") {
     return {
       data: [
-        { name: "helpfulness", average_value: 0.87, count: 4200 },
-        { name: "accuracy", average_value: 0.92, count: 3800 },
-        { name: "relevance", average_value: 0.84, count: 4100 },
+        { name: "helpfulness", avg_value: 0.87, count: 4200 },
+        { name: "accuracy", avg_value: 0.92, count: 3800 },
+        { name: "relevance", avg_value: 0.84, count: 4100 },
       ],
     };
   }

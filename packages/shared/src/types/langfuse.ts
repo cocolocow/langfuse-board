@@ -2,7 +2,7 @@ export type Granularity = "hour" | "day" | "week" | "month";
 
 export type AggregationFn =
   | "sum"
-  | "average"
+  | "avg"
   | "count"
   | "max"
   | "min"
