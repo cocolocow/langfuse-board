@@ -12,6 +12,7 @@ import { createQualityRoutes } from "./routes/quality.js";
 import { createHealthRoutes } from "./routes/health.js";
 import { createFeedRoutes } from "./routes/feed.js";
 import { createConfigRoutes } from "./routes/config.js";
+import { createBreakdownRoutes } from "./routes/breakdown.js";
 
 interface AppDeps {
   langfuse: LangfuseClient;
@@ -32,6 +33,7 @@ export function createApp({ langfuse, cache, boardConfig }: AppDeps) {
   app.route("/api/quality", createQualityRoutes(langfuse, cache));
   app.route("/api/feed", createFeedRoutes(langfuse, cache, boardConfig));
   app.route("/api/config", createConfigRoutes(langfuse, boardConfig));
+  app.route("/api/breakdown", createBreakdownRoutes(langfuse, cache, boardConfig));
   app.route("/api/health", createHealthRoutes(langfuse, cache));
 
   return app;

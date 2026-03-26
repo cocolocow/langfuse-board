@@ -1,17 +1,21 @@
 import { useUsage } from "../hooks/use-dashboard-data.js";
+import { useConfig } from "../hooks/use-config.js";
 import { KpiCard } from "../components/cards/KpiCard.js";
 import { TrendChart } from "../components/charts/TrendChart.js";
-import { BarBreakdown } from "../components/charts/BarBreakdown.js";
-import { DataTable } from "../components/tables/DataTable.js";
+import { BreakdownCard } from "../components/cards/BreakdownCard.js";
 import { Loader, ErrorState } from "../components/Loader.js";
-import { formatCost, formatTokens } from "@langfuse-board/shared";
+import { formatTokens } from "@langfuse-board/shared";
 
 export function Usage() {
   const { data, isLoading, error } = useUsage();
+  const { data: config } = useConfig();
 
   if (isLoading) return <Loader />;
   if (error) return <ErrorState message={error.message} />;
   if (!data) return null;
+
+  const breakdownDimensions =
+    config?.dimensions.filter((d) => d.show.includes("breakdown")) ?? [];
 
   return (
     <div className="space-y-6">
@@ -38,34 +42,13 @@ export function Usage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <BarBreakdown
-          data={data.topModels.map((m) => ({
-            name: m.model,
-            value: m.tokens,
-          }))}
-          title="Words by Model"
-          formatter={(v) => formatTokens(v)}
-        />
-        <DataTable
-          data={data.topUsers.map((u) => ({
-            userId: u.userId,
-            traces: u.traces,
-            cost: u.cost,
-          }))}
-          columns={[
-            { key: "userId", label: "User" },
-            { key: "traces", label: "Traces", align: "right" },
-            {
-              key: "cost",
-              label: "Cost",
-              align: "right",
-              render: (v) => formatCost(v as number),
-            },
-          ]}
-          title="Top Users"
-        />
-      </div>
+      {breakdownDimensions.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {breakdownDimensions.map((dim) => (
+            <BreakdownCard key={dim.key} dimensionKey={dim.key} label={dim.label} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

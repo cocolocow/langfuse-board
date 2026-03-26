@@ -1,22 +1,21 @@
 import { useCosts } from "../hooks/use-dashboard-data.js";
+import { useConfig } from "../hooks/use-config.js";
 import { KpiCard } from "../components/cards/KpiCard.js";
 import { TrendChart } from "../components/charts/TrendChart.js";
-import { DistributionChart } from "../components/charts/DistributionChart.js";
-import { DataTable } from "../components/tables/DataTable.js";
+import { BreakdownCard } from "../components/cards/BreakdownCard.js";
 import { Loader, ErrorState } from "../components/Loader.js";
 import { formatCost } from "@langfuse-board/shared";
 
 export function Costs() {
   const { data, isLoading, error } = useCosts();
+  const { data: config } = useConfig();
 
   if (isLoading) return <Loader />;
   if (error) return <ErrorState message={error.message} />;
   if (!data) return null;
 
-  const donutData = data.byModel.map((m) => ({
-    name: m.name,
-    value: m.cost,
-  }));
+  const breakdownDimensions =
+    config?.dimensions.filter((d) => d.show.includes("breakdown")) ?? [];
 
   return (
     <div className="space-y-6">
@@ -35,35 +34,9 @@ export function Costs() {
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <DistributionChart
-          data={donutData}
-          title="Cost by Model"
-          formatter={(v) => formatCost(v)}
-        />
-        <DataTable
-          data={data.byTraceName.map((t) => ({
-            name: t.name,
-            cost: t.cost,
-            percentage: t.percentage,
-            tokens: t.tokens,
-          }))}
-          columns={[
-            { key: "name", label: "Feature" },
-            {
-              key: "cost",
-              label: "Cost",
-              align: "right",
-              render: (v) => formatCost(v as number),
-            },
-            {
-              key: "percentage",
-              label: "%",
-              align: "right",
-              render: (v) => `${(v as number).toFixed(1)}%`,
-            },
-          ]}
-          title="Cost by Feature"
-        />
+        {breakdownDimensions.map((dim) => (
+          <BreakdownCard key={dim.key} dimensionKey={dim.key} label={dim.label} />
+        ))}
       </div>
     </div>
   );

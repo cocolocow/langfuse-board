@@ -48,3 +48,17 @@ export function useFeed() {
     refetchInterval: 5000,
   });
 }
+
+interface BreakdownResponse {
+  dimension: { key: string; label: string };
+  items: { name: string; cost: number; count: number; percentage: number }[];
+}
+
+export function useBreakdown(key: string) {
+  const { queryString } = useDateRange();
+  return useQuery({
+    queryKey: ["breakdown", key, queryString],
+    queryFn: () => fetchApi<BreakdownResponse>("/api/breakdown", `key=${key}&${queryString}`),
+    enabled: !!key,
+  });
+}
