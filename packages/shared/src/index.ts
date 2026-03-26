@@ -26,6 +26,8 @@ export type {
   CostsResponse,
   UsageResponse,
   QualityResponse,
+  FeedItem,
+  FeedResponse,
   HealthResponse,
 } from "./types/api.js";
 
@@ -50,6 +52,10 @@ export {
 export {
   fillMissingDataPoints,
 } from "./transformers/timeseries.js";
+
+export {
+  formatTimeAgo,
+} from "./transformers/time.js";
 
 // Validators
 export {

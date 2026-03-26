@@ -6,6 +6,7 @@ import { Overview } from "./pages/Overview.js";
 import { Costs } from "./pages/Costs.js";
 import { Usage } from "./pages/Usage.js";
 import { Quality } from "./pages/Quality.js";
+import { Feed } from "./pages/Feed.js";
 
 export function App() {
   return (
@@ -20,6 +21,7 @@ export function App() {
               <Route path="/costs" component={Costs} />
               <Route path="/usage" component={Usage} />
               <Route path="/quality" component={Quality} />
+              <Route path="/live" component={Feed} />
             </Switch>
           </main>
         </div>

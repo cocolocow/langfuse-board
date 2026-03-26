@@ -2,7 +2,7 @@ import type {
   LangfuseMetricsQuery,
   LangfuseMetricsResponse,
 } from "@langfuse-board/shared";
-import type { LangfuseClient } from "./client.js";
+import type { LangfuseClient, LangfuseTrace } from "./client.js";
 
 function randomBetween(min: number, max: number): number {
   return Math.round((Math.random() * (max - min) + min) * 100) / 100;
@@ -138,6 +138,77 @@ export function createMockLangfuseClient(): LangfuseClient {
       await new Promise((r) => setTimeout(r, randomBetween(50, 200)));
       return handleQuery(query);
     },
+    listTraces: async (limit = 30) => {
+      await new Promise((r) => setTimeout(r, randomBetween(20, 80)));
+      return { data: generateMockTraces(limit) };
+    },
     healthCheck: async () => true,
   } as LangfuseClient;
+}
+
+const MOCK_FEATURES = [
+  "chat-completion",
+  "document-qa",
+  "summarize",
+  "code-review",
+  "translate",
+  "search",
+  "classify",
+];
+
+const MOCK_MODELS = [
+  "claude-sonnet-4-20250514",
+  "gpt-4o",
+  "gpt-4o-mini",
+  "claude-haiku-4-5-20251001",
+  "gemini-2.0-flash",
+];
+
+const MOCK_USERS = [
+  "alice@company.com",
+  "bob@company.com",
+  "charlie@company.com",
+  "diana@company.com",
+  "eve@company.com",
+  "frank@company.com",
+];
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]!;
+}
+
+let traceCounter = 0;
+
+function generateMockTraces(count: number): LangfuseTrace[] {
+  const traces: LangfuseTrace[] = [];
+  const now = Date.now();
+
+  for (let i = 0; i < count; i++) {
+    traceCounter++;
+    const ageMs = i * randomBetween(3000, 15000);
+    const isError = Math.random() < 0.05;
+    const model = pick(MOCK_MODELS);
+    const latency = randomBetween(0.3, 8);
+    const cost =
+      model.includes("gpt-4o-mini") || model.includes("haiku") || model.includes("flash")
+        ? randomBetween(0.001, 0.02)
+        : randomBetween(0.01, 0.15);
+
+    traces.push({
+      id: `trace-${traceCounter}`,
+      timestamp: new Date(now - ageMs).toISOString(),
+      name: pick(MOCK_FEATURES),
+      userId: Math.random() < 0.9 ? pick(MOCK_USERS) : null,
+      latency,
+      totalCost: cost,
+      observations: [
+        {
+          model,
+          level: isError ? "ERROR" : "DEFAULT",
+        },
+      ],
+    });
+  }
+
+  return traces;
 }

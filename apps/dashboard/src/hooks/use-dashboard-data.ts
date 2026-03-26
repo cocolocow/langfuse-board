@@ -6,6 +6,7 @@ import type {
   CostsResponse,
   UsageResponse,
   QualityResponse,
+  FeedResponse,
 } from "@langfuse-board/shared";
 
 export function useOverview() {
@@ -37,5 +38,13 @@ export function useQuality() {
   return useQuery({
     queryKey: ["quality", queryString],
     queryFn: () => fetchApi<QualityResponse>("/api/quality", queryString),
+  });
+}
+
+export function useFeed() {
+  return useQuery({
+    queryKey: ["feed"],
+    queryFn: () => fetchApi<FeedResponse>("/api/feed", "limit=30"),
+    refetchInterval: 5000,
   });
 }

@@ -9,6 +9,7 @@ import { createCostsRoutes } from "./routes/costs.js";
 import { createUsageRoutes } from "./routes/usage.js";
 import { createQualityRoutes } from "./routes/quality.js";
 import { createHealthRoutes } from "./routes/health.js";
+import { createFeedRoutes } from "./routes/feed.js";
 
 export function createApp(langfuse: LangfuseClient, cache: CacheStore) {
   const app = new Hono();
@@ -21,6 +22,7 @@ export function createApp(langfuse: LangfuseClient, cache: CacheStore) {
   app.route("/api/costs", createCostsRoutes(langfuse, cache));
   app.route("/api/usage", createUsageRoutes(langfuse, cache));
   app.route("/api/quality", createQualityRoutes(langfuse, cache));
+  app.route("/api/feed", createFeedRoutes(langfuse, cache));
   app.route("/api/health", createHealthRoutes(langfuse, cache));
 
   return app;

@@ -53,6 +53,21 @@ export interface QualityResponse {
   scores: ScoreSummary[];
 }
 
+export interface FeedItem {
+  id: string;
+  timestamp: string;
+  userId: string | null;
+  name: string;
+  model: string | null;
+  latencyMs: number;
+  cost: number;
+  status: "success" | "error";
+}
+
+export interface FeedResponse {
+  items: FeedItem[];
+}
+
 export interface HealthResponse {
   status: "ok" | "error";
   langfuse: boolean;
