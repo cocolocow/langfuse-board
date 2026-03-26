@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
 import { DEFAULT_CONFIG } from "../../config/board.js";
-import type { LangfuseClient } from "../../langfuse/client.js";
+import type { ILangfuseClient } from "../../langfuse/client.js";
 import type { BoardConfig } from "@langfuse-board/shared";
 
 function createConfigTestApp(boardConfig?: BoardConfig) {
@@ -15,6 +15,7 @@ function createConfigTestApp(boardConfig?: BoardConfig) {
           timestamp: "2024-01-01T00:00:00Z",
           name: "chat",
           userId: "alice",
+          sessionId: null,
           latency: 1,
           totalCost: 0.01,
           metadata: { account_id: "acme", plan: "pro" },
@@ -25,6 +26,7 @@ function createConfigTestApp(boardConfig?: BoardConfig) {
           timestamp: "2024-01-01T00:00:01Z",
           name: "search",
           userId: "bob",
+          sessionId: null,
           latency: 0.5,
           totalCost: 0.005,
           metadata: { account_id: "beta" },
@@ -35,6 +37,7 @@ function createConfigTestApp(boardConfig?: BoardConfig) {
           timestamp: "2024-01-01T00:00:02Z",
           name: "chat",
           userId: null,
+          sessionId: null,
           latency: 2,
           totalCost: 0.02,
           metadata: null,
@@ -42,8 +45,9 @@ function createConfigTestApp(boardConfig?: BoardConfig) {
         },
       ],
     }),
+    getDailyMetrics: async () => ({ data: [] }),
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } satisfies ILangfuseClient;
 
   const cache = new InMemoryCache();
   return createApp({ langfuse, cache, boardConfig: boardConfig ?? DEFAULT_CONFIG });
@@ -63,7 +67,7 @@ describe("GET /api/config", () => {
     const res = await app.request("/api/config");
     expect(res.status).toBe(200);
 
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(body.name).toBe("My SaaS");
     expect(body.dimensions).toHaveLength(2);
     expect(body.dimensions[0].key).toBe("userId");
@@ -74,7 +78,7 @@ describe("GET /api/config", () => {
     const app = createConfigTestApp();
 
     const res = await app.request("/api/config");
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.name).toBe("langfuse-board");
     expect(body.dimensions.length).toBeGreaterThan(0);
@@ -94,7 +98,7 @@ describe("GET /api/config/diagnostic", () => {
     const res = await app.request("/api/config/diagnostic");
     expect(res.status).toBe(200);
 
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(body.tracesScanned).toBe(3);
     expect(body.fields.length).toBeGreaterThan(0);
 

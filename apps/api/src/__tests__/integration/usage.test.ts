@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
 import { DEFAULT_CONFIG } from "../../config/board.js";
-import type { LangfuseClient } from "../../langfuse/client.js";
+import type { ILangfuseClient } from "../../langfuse/client.js";
 
 function createUsageTestApp() {
   const langfuse = {
@@ -23,13 +23,13 @@ function createUsageTestApp() {
     }),
     listTraces: async () => ({
       data: [
-        { id: "t-1", timestamp: "2024-01-15T12:00:00Z", name: "chat", userId: "alice", latency: 1, totalCost: 0.05, metadata: null, observations: [] },
-        { id: "t-2", timestamp: "2024-01-15T12:01:00Z", name: "chat", userId: "bob", latency: 0.5, totalCost: 0.03, metadata: null, observations: [] },
-        { id: "t-3", timestamp: "2024-01-15T12:02:00Z", name: "chat", userId: "alice", latency: 2, totalCost: 0.08, metadata: null, observations: [] },
+        { id: "t-1", timestamp: "2024-01-15T12:00:00Z", name: "chat", userId: "alice", sessionId: null, latency: 1, totalCost: 0.05, metadata: null, observations: [] },
+        { id: "t-2", timestamp: "2024-01-15T12:01:00Z", name: "chat", userId: "bob", sessionId: null, latency: 0.5, totalCost: 0.03, metadata: null, observations: [] },
+        { id: "t-3", timestamp: "2024-01-15T12:02:00Z", name: "chat", userId: "alice", sessionId: null, latency: 2, totalCost: 0.08, metadata: null, observations: [] },
       ],
     }),
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } satisfies ILangfuseClient;
 
   const cache = new InMemoryCache();
   return createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG });
@@ -43,7 +43,7 @@ describe("GET /api/usage", () => {
     const res = await app.request(`/api/usage${q}`);
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.totalTraces.value).toBe(500);
     expect(body.totalTokens.value).toBe(390000);

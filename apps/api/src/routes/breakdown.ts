@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import type { LangfuseClient } from "../langfuse/client.js";
+import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
 import type { BoardConfig, Dimension } from "@langfuse-board/shared";
 import { dateRangeSchema } from "@langfuse-board/shared";
@@ -22,7 +22,7 @@ const breakdownQuerySchema = dateRangeSchema.extend({
 });
 
 export function createBreakdownRoutes(
-  langfuse: LangfuseClient,
+  langfuse: ILangfuseClient,
   cache: CacheStore,
   boardConfig: BoardConfig,
 ) {
@@ -34,7 +34,7 @@ export function createBreakdownRoutes(
       return c.json({ error: "Invalid query params", details: parsed.error.issues }, 400);
     }
 
-    const { key, from, to, granularity } = parsed.data;
+    const { key, from, to } = parsed.data;
 
     const dim = boardConfig.dimensions.find(
       (d) => d.key === key && d.show.includes("breakdown"),
@@ -67,7 +67,7 @@ export function createBreakdownRoutes(
 }
 
 async function breakdownByTraceField(
-  langfuse: LangfuseClient,
+  langfuse: ILangfuseClient,
   dim: Dimension,
   from: string,
   to: string,
@@ -105,7 +105,7 @@ async function breakdownByTraceField(
 }
 
 async function breakdownByMetadata(
-  langfuse: LangfuseClient,
+  langfuse: ILangfuseClient,
   dim: Dimension,
   from: string,
   to: string,

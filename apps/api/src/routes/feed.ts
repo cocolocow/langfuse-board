@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import type { LangfuseClient, LangfuseTrace } from "../langfuse/client.js";
+import type { ILangfuseClient, LangfuseTrace } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
 import type { FeedItem, FeedResponse, BoardConfig, Dimension } from "@langfuse-board/shared";
 
@@ -34,7 +34,7 @@ function extractDimension(trace: LangfuseTrace, dim: Dimension): string | null {
 }
 
 export function createFeedRoutes(
-  langfuse: LangfuseClient,
+  langfuse: ILangfuseClient,
   cache: CacheStore,
   boardConfig?: BoardConfig,
 ) {

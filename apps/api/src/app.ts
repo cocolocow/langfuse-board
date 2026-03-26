@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import type { LangfuseClient } from "./langfuse/client.js";
+import type { ILangfuseClient } from "./langfuse/client.js";
 import type { CacheStore } from "./cache/store.js";
 import type { BoardConfig } from "@langfuse-board/shared";
 import { errorHandler } from "./middleware/error.js";
@@ -15,7 +15,7 @@ import { createConfigRoutes } from "./routes/config.js";
 import { createBreakdownRoutes } from "./routes/breakdown.js";
 
 interface AppDeps {
-  langfuse: LangfuseClient;
+  langfuse: ILangfuseClient;
   cache: CacheStore;
   boardConfig: BoardConfig;
 }

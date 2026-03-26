@@ -1,11 +1,11 @@
 import { Hono } from "hono";
-import type { LangfuseClient } from "../langfuse/client.js";
+import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
 import type { BoardConfig, DiagnosticResponse } from "@langfuse-board/shared";
 import { extractDiagnosticFields } from "../config/diagnostic.js";
 
 export function createConfigRoutes(
-  langfuse: LangfuseClient,
+  langfuse: ILangfuseClient,
   boardConfig: BoardConfig,
   cache: CacheStore,
 ) {

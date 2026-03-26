@@ -2,7 +2,7 @@ import type {
   LangfuseMetricsQuery,
   LangfuseMetricsResponse,
 } from "@langfuse-board/shared";
-import type { LangfuseClient, LangfuseTrace } from "./client.js";
+import type { ILangfuseClient, LangfuseTrace } from "./client.js";
 
 function randomBetween(min: number, max: number): number {
   return Math.round((Math.random() * (max - min) + min) * 100) / 100;
@@ -132,7 +132,7 @@ function handleQuery(query: LangfuseMetricsQuery): LangfuseMetricsResponse {
   return { data: [] };
 }
 
-export function createMockLangfuseClient(): LangfuseClient {
+export function createMockLangfuseClient(): ILangfuseClient {
   return {
     queryMetrics: async (query: LangfuseMetricsQuery) => {
       await new Promise((r) => setTimeout(r, randomBetween(50, 200)));
@@ -147,7 +147,7 @@ export function createMockLangfuseClient(): LangfuseClient {
       return { data: generateMockTraces(limit) };
     },
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } as ILangfuseClient;
 }
 
 function generateMockDailyMetrics(from?: string, to?: string) {
@@ -268,6 +268,7 @@ function generateMockTraces(count: number): LangfuseTrace[] {
       timestamp: new Date(now - ageMs).toISOString(),
       name: pick(MOCK_FEATURES),
       userId,
+      sessionId: null,
       latency,
       totalCost: cost,
       metadata: {

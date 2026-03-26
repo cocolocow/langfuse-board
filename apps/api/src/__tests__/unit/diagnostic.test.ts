@@ -17,6 +17,7 @@ function makeTrace(overrides: Partial<LangfuseTrace> = {}): LangfuseTrace {
     timestamp: "2024-01-01T00:00:00Z",
     name: "test",
     userId: "user-1",
+    sessionId: null,
     latency: 1,
     totalCost: 0.01,
     metadata: null,

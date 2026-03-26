@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
-import type { LangfuseClient } from "../../langfuse/client.js";
+import type { ILangfuseClient } from "../../langfuse/client.js";
 import type { BoardConfig } from "@langfuse-board/shared";
 
 const testConfig: BoardConfig = {
@@ -23,6 +23,7 @@ function createFeedTestApp(config?: BoardConfig) {
           timestamp: "2024-01-15T12:00:00Z",
           name: "chat-completion",
           userId: "alice@company.com",
+          sessionId: null,
           latency: 1.2,
           totalCost: 0.05,
           metadata: { account_id: "acme", user_name: "Alice", plan: "pro" },
@@ -33,6 +34,7 @@ function createFeedTestApp(config?: BoardConfig) {
           timestamp: "2024-01-15T11:59:50Z",
           name: "summarize",
           userId: "bob@company.com",
+          sessionId: null,
           latency: 2.5,
           totalCost: 0.12,
           metadata: { account_id: "beta" },
@@ -40,8 +42,9 @@ function createFeedTestApp(config?: BoardConfig) {
         },
       ].slice(0, limit),
     }),
+    getDailyMetrics: async () => ({ data: [] }),
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } satisfies ILangfuseClient;
 
   const cache = new InMemoryCache();
   return { app: createApp({ langfuse, cache, boardConfig: config ?? testConfig }), cache };
@@ -54,7 +57,7 @@ describe("GET /api/feed", () => {
     const res = await app.request("/api/feed");
     expect(res.status).toBe(200);
 
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(body.items).toHaveLength(2);
 
     const first = body.items[0];
@@ -73,7 +76,7 @@ describe("GET /api/feed", () => {
     const { app } = createFeedTestApp();
 
     const res = await app.request("/api/feed");
-    const body = await res.json();
+    const body = await res.json() as any;
 
     const second = body.items[1];
     expect(second.dimensions.account_id).toBe("beta");
@@ -84,7 +87,7 @@ describe("GET /api/feed", () => {
     const { app } = createFeedTestApp();
 
     const res = await app.request("/api/feed");
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.items[1].status).toBe("error");
   });
@@ -93,7 +96,7 @@ describe("GET /api/feed", () => {
     const { app } = createFeedTestApp();
 
     const res = await app.request("/api/feed?limit=1");
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.items).toHaveLength(1);
   });
@@ -103,7 +106,7 @@ describe("GET /api/feed", () => {
     const { app } = createFeedTestApp(emptyConfig);
 
     const res = await app.request("/api/feed");
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.items[0].dimensions).toEqual({});
   });

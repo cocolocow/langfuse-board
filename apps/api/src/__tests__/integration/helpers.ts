@@ -1,12 +1,12 @@
 import type { LangfuseMetricsQuery, LangfuseMetricsResponse, BoardConfig } from "@langfuse-board/shared";
-import type { LangfuseClient } from "../../langfuse/client.js";
+import type { ILangfuseClient } from "../../langfuse/client.js";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
 import { DEFAULT_CONFIG } from "../../config/board.js";
 
 export function createMockLangfuse(
   handler: (query: LangfuseMetricsQuery) => LangfuseMetricsResponse,
-): LangfuseClient {
+): ILangfuseClient {
   return {
     queryMetrics: async (query: LangfuseMetricsQuery) => handler(query),
     getDailyMetrics: async () => ({
@@ -25,7 +25,7 @@ export function createMockLangfuse(
     }),
     listTraces: async () => ({ data: [] }),
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } satisfies ILangfuseClient;
 }
 
 export function createTestApp(

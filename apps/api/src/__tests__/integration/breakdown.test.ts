@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
-import type { LangfuseClient } from "../../langfuse/client.js";
+import type { ILangfuseClient } from "../../langfuse/client.js";
 import type { BoardConfig } from "@langfuse-board/shared";
 
 const testConfig: BoardConfig = {
@@ -31,28 +31,29 @@ function createBreakdownTestApp() {
       data: [
         {
           id: "t-1", timestamp: "2024-01-15T12:00:00Z", name: "chat",
-          userId: "alice", latency: 1, totalCost: 0.05,
+          userId: "alice", sessionId: null, latency: 1, totalCost: 0.05,
           metadata: { account_id: "acme", user_name: "Alice" }, observations: [],
         },
         {
           id: "t-2", timestamp: "2024-01-15T11:00:00Z", name: "search",
-          userId: "bob", latency: 0.5, totalCost: 0.03,
+          userId: "bob", sessionId: null, latency: 0.5, totalCost: 0.03,
           metadata: { account_id: "acme", user_name: "Bob" }, observations: [],
         },
         {
           id: "t-3", timestamp: "2024-01-15T10:00:00Z", name: "chat",
-          userId: "charlie", latency: 2, totalCost: 0.08,
+          userId: "charlie", sessionId: null, latency: 2, totalCost: 0.08,
           metadata: { account_id: "beta" }, observations: [],
         },
         {
           id: "t-4", timestamp: "2024-01-10T10:00:00Z", name: "chat",
-          userId: "d", latency: 1, totalCost: 0.02,
+          userId: "d", sessionId: null, latency: 1, totalCost: 0.02,
           metadata: { account_id: "gamma" }, observations: [],
         },
       ],
     }),
+    getDailyMetrics: async () => ({ data: [] }),
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } satisfies ILangfuseClient;
 
   const cache = new InMemoryCache();
   return createApp({ langfuse, cache, boardConfig: testConfig });
@@ -66,7 +67,7 @@ describe("GET /api/breakdown", () => {
     const res = await app.request(`/api/breakdown?key=userId${dateParams}`);
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.dimension.key).toBe("userId");
     expect(body.dimension.label).toBe("User");
@@ -81,7 +82,7 @@ describe("GET /api/breakdown", () => {
     const res = await app.request(`/api/breakdown?key=account_id${dateParams}`);
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.dimension.key).toBe("account_id");
     expect(body.dimension.label).toBe("Account");

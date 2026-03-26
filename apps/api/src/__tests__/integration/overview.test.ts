@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
 import { DEFAULT_CONFIG } from "../../config/board.js";
-import type { LangfuseClient } from "../../langfuse/client.js";
+import type { ILangfuseClient } from "../../langfuse/client.js";
 
 function createOverviewTestApp() {
   const langfuse = {
@@ -17,7 +17,7 @@ function createOverviewTestApp() {
     }),
     listTraces: async () => ({ data: [] }),
     healthCheck: async () => true,
-  } as LangfuseClient;
+  } satisfies ILangfuseClient;
 
   const cache = new InMemoryCache();
   return createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG });
@@ -31,7 +31,7 @@ describe("GET /api/overview", () => {
     const res = await app.request(`/api/overview${q}`);
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as any;
 
     expect(body.kpis.totalCost.value).toBe(97.5);
     expect(body.kpis.totalTraces.value).toBe(1100);

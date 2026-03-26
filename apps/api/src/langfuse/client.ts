@@ -8,6 +8,7 @@ export interface LangfuseTrace {
   timestamp: string;
   name: string | null;
   userId: string | null;
+  sessionId: string | null;
   latency: number | null;
   totalCost: number;
   metadata: Record<string, unknown> | null;
@@ -40,13 +41,20 @@ export interface LangfuseDailyResponse {
   data: LangfuseDailyRow[];
 }
 
+export interface ILangfuseClient {
+  queryMetrics(query: LangfuseMetricsQuery): Promise<LangfuseMetricsResponse>;
+  getDailyMetrics(params?: { from?: string; to?: string; traceName?: string }): Promise<LangfuseDailyResponse>;
+  listTraces(limit?: number): Promise<LangfuseTracesResponse>;
+  healthCheck(): Promise<boolean>;
+}
+
 export interface LangfuseClientConfig {
   host: string;
   publicKey: string;
   secretKey: string;
 }
 
-export class LangfuseClient {
+export class LangfuseClient implements ILangfuseClient {
   private baseUrl: string;
   private authHeader: string;
 

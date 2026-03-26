@@ -27,7 +27,7 @@ describe("GET /api/quality", () => {
     const res = await app.request(`/api/quality${defaultQuery}`);
     expect(res.status).toBe(200);
 
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(body.avgLatency.value).toBe(1200);
     expect(body.avgLatency.unit).toBe("duration");
     expect(body.p95Latency.value).toBe(3500);
@@ -44,7 +44,7 @@ describe("GET /api/health", () => {
     const res = await app.request("/api/health");
     expect(res.status).toBe(200);
 
-    const body = await res.json();
+    const body = await res.json() as any;
     expect(body.status).toBe("ok");
     expect(body.langfuse).toBe(true);
     expect(typeof body.cacheSize).toBe("number");
