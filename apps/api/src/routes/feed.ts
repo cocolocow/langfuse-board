@@ -29,16 +29,20 @@ export function createFeedRoutes(
     const traces = await langfuse.listTraces(limit);
 
     const items: FeedItem[] = traces.data.map((trace) => {
-      const firstObs = trace.observations?.[0];
-      const hasError =
-        trace.observations?.some((o) => o.level === "ERROR") ?? false;
+      const obsObjects = trace.observations?.filter(
+        (o): o is { model: string | null; level: string } => typeof o === "object" && o !== null,
+      ) ?? [];
+      const hasError = obsObjects.some((o) => o.level === "ERROR");
+      const model = obsObjects[0]?.model
+        ?? (trace.metadata as Record<string, unknown> | null)?.["model"] as string | undefined
+        ?? null;
 
       return {
         id: trace.id,
         timestamp: trace.timestamp,
         userId: trace.userId,
         name: trace.name ?? "unknown",
-        model: firstObs?.model ?? null,
+        model,
         latencyMs: (trace.latency ?? 0) * 1000,
         cost: trace.totalCost ?? 0,
         status: hasError ? "error" : "success",

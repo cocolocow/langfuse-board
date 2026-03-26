@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:live": "vitest run --config vitest.live.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

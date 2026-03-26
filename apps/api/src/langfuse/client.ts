@@ -10,7 +10,8 @@ export interface LangfuseTrace {
   userId: string | null;
   latency: number | null;
   totalCost: number;
-  observations: { model: string | null; level: string }[];
+  metadata: Record<string, unknown> | null;
+  observations: (string | { model: string | null; level: string })[];
 }
 
 export interface LangfuseTracesResponse {
