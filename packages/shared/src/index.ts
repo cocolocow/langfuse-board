@@ -51,6 +51,7 @@ export {
 export {
   formatTokens,
   aggregateUsageByModel,
+  type ModelUsage,
 } from "./transformers/usage.js";
 
 export {

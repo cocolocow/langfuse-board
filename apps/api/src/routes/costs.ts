@@ -1,20 +1,12 @@
 import { Hono } from "hono";
-import type { LangfuseClient } from "../langfuse/client.js";
+import type { LangfuseClient, LangfuseDailyRow } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
 import {
   dateRangeSchema,
-  aggregateCostByModel,
   projectMonthlyCost,
 } from "@langfuse-board/shared";
-import {
-  costTotalQuery,
-  costTrendQuery,
-  costByModelQuery,
-  costByTraceNameQuery,
-} from "../langfuse/queries.js";
 import type {
   CostsResponse,
-  LangfuseMetricsResponse,
   TimeseriesPoint,
   CostBreakdown,
 } from "@langfuse-board/shared";
@@ -31,29 +23,46 @@ export function createCostsRoutes(
       return c.json({ error: "Invalid query params", details: parsed.error.issues }, 400);
     }
 
-    const { from, to, granularity } = parsed.data;
-    const cacheKey = `costs:${from}:${to}:${granularity}`;
+    const { from, to } = parsed.data;
+    const cacheKey = `costs:${from}:${to}`;
 
     const cached = cache.get<CostsResponse>(cacheKey);
     if (cached) return c.json(cached);
 
-    const params = { from, to, granularity };
+    // Daily Metrics API — zero metrics quota cost
+    const daily = await langfuse.getDailyMetrics({ from, to });
 
-    const [costTotal, costTrend, byModel, byTraceName] = await Promise.all([
-      langfuse.queryMetrics(costTotalQuery(params)),
-      langfuse.queryMetrics(costTrendQuery(params)),
-      langfuse.queryMetrics(costByModelQuery(params)),
-      langfuse.queryMetrics(costByTraceNameQuery(params)),
-    ]);
+    let totalCost = 0;
+    const trend: TimeseriesPoint[] = [];
+    const modelCosts = new Map<string, { cost: number; tokens: number }>();
 
-    const totalValue = sumMetric(costTotal, "sum_totalCost");
-    const trendData = toTimeseries(costTrend, "sum_totalCost");
-    const projected = projectMonthlyCost(trendData);
+    for (const row of daily.data) {
+      totalCost += row.totalCost ?? 0;
+      trend.push({ timestamp: row.date, value: row.totalCost ?? 0 });
+
+      for (const usage of row.usage ?? []) {
+        const entry = modelCosts.get(usage.model) ?? { cost: 0, tokens: 0 };
+        entry.cost += usage.totalCost ?? 0;
+        entry.tokens += usage.totalUsage ?? 0;
+        modelCosts.set(usage.model, entry);
+      }
+    }
+
+    const projected = projectMonthlyCost(trend);
+
+    const byModel: CostBreakdown[] = Array.from(modelCosts.entries())
+      .map(([name, { cost, tokens }]) => ({
+        name,
+        cost,
+        tokens,
+        percentage: totalCost > 0 ? (cost / totalCost) * 100 : 0,
+      }))
+      .sort((a, b) => b.cost - a.cost);
 
     const response: CostsResponse = {
       total: {
         label: "Total Cost",
-        value: totalValue,
+        value: totalCost,
         previousValue: null,
         unit: "currency",
         trend: null,
@@ -65,52 +74,19 @@ export function createCostsRoutes(
         unit: "currency",
         trend: null,
       },
-      byModel: aggregateCostByModel(byModel.data),
-      byTraceName: aggregateByName(byTraceName),
-      trend: trendData,
+      byModel,
+      byTraceName: [],
+      trend,
       trendByModel: {},
     };
 
-    const ttl = isHistorical(to) ? 3_600_000 : 300_000;
+    const ttl = isHistorical(to) ? 3_600_000 : 1_800_000;
     cache.set(cacheKey, response, ttl);
 
     return c.json(response);
   });
 
   return app;
-}
-
-function sumMetric(res: LangfuseMetricsResponse, field: string): number {
-  return res.data.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
-}
-
-function toTimeseries(
-  res: LangfuseMetricsResponse,
-  field: string,
-): TimeseriesPoint[] {
-  return res.data.map((row) => ({
-    timestamp: String(row["time_dimension"] ?? row["time"] ?? row["date"] ?? ""),
-    value: Number(row[field]) || 0,
-  }));
-}
-
-function aggregateByName(res: LangfuseMetricsResponse): CostBreakdown[] {
-  const total = res.data.reduce(
-    (sum, row) => sum + (Number(row["sum_totalCost"]) || 0),
-    0,
-  );
-
-  return res.data
-    .map((row) => {
-      const cost = Number(row["sum_totalCost"]) || 0;
-      return {
-        name: String(row["name"] ?? "unknown"),
-        cost,
-        percentage: total > 0 ? (cost / total) * 100 : 0,
-        tokens: Number(row["sum_totalTokens"]) || 0,
-      };
-    })
-    .sort((a, b) => b.cost - a.cost);
 }
 
 function isHistorical(to: string): boolean {

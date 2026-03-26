@@ -2,16 +2,8 @@ import { Hono } from "hono";
 import type { LangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
 import { dateRangeSchema } from "@langfuse-board/shared";
-import { calculateDelta } from "@langfuse-board/shared";
-import {
-  costTotalQuery,
-  costTrendQuery,
-  tracesTrendQuery,
-  latencyQuery,
-} from "../langfuse/queries.js";
 import type {
   OverviewResponse,
-  LangfuseMetricsResponse,
   TimeseriesPoint,
 } from "@langfuse-board/shared";
 
@@ -27,45 +19,60 @@ export function createOverviewRoutes(
       return c.json({ error: "Invalid query params", details: parsed.error.issues }, 400);
     }
 
-    const { from, to, granularity } = parsed.data;
-    const cacheKey = `overview:${from}:${to}:${granularity}`;
+    const { from, to } = parsed.data;
+    const cacheKey = `overview:${from}:${to}`;
 
     const cached = cache.get<OverviewResponse>(cacheKey);
     if (cached) return c.json(cached);
 
-    const params = { from, to, granularity };
+    // Daily Metrics API — zero metrics quota cost
+    const daily = await langfuse.getDailyMetrics({ from, to });
 
-    const [costTotal, costTrend, tracesTrend, latency] = await Promise.all([
-      langfuse.queryMetrics(costTotalQuery(params)),
-      langfuse.queryMetrics(costTrendQuery(params)),
-      langfuse.queryMetrics(tracesTrendQuery(params)),
-      langfuse.queryMetrics(latencyQuery(params)),
-    ]);
+    let totalCost = 0;
+    let totalTraces = 0;
+    const costTrend: TimeseriesPoint[] = [];
+    const tracesTrend: TimeseriesPoint[] = [];
 
-    const totalCostValue = sumMetric(costTotal, "sum_totalCost");
-    const totalTracesValue = sumMetric(costTotal, "count");
-    const avgLatencyValue = firstMetric(latency, "avg_latency");
-    const p95LatencyValue = firstMetric(latency, "p95_latency");
+    for (const row of daily.data) {
+      totalCost += row.totalCost ?? 0;
+      totalTraces += row.countTraces ?? 0;
+      costTrend.push({ timestamp: row.date, value: row.totalCost ?? 0 });
+      tracesTrend.push({ timestamp: row.date, value: row.countTraces ?? 0 });
+    }
+
+    // Latency still needs Metrics API (1 call)
+    let avgLatency = 0;
+    try {
+      const latency = await langfuse.queryMetrics({
+        view: "traces",
+        metrics: [{ measure: "latency", aggregation: "avg" }],
+        fromTimestamp: from,
+        toTimestamp: to,
+      });
+      avgLatency = Number(latency.data[0]?.["avg_latency"]) || 0;
+    } catch {
+      // Rate limited — graceful degradation
+    }
 
     const response: OverviewResponse = {
       kpis: {
         totalCost: {
           label: "Total Cost",
-          value: totalCostValue,
+          value: totalCost,
           previousValue: null,
           unit: "currency",
           trend: null,
         },
         totalTraces: {
           label: "Total Requests",
-          value: totalTracesValue,
+          value: totalTraces,
           previousValue: null,
           unit: "number",
           trend: null,
         },
         avgLatency: {
           label: "Avg Response Time",
-          value: avgLatencyValue,
+          value: avgLatency,
           previousValue: null,
           unit: "duration",
           trend: null,
@@ -78,35 +85,17 @@ export function createOverviewRoutes(
           trend: null,
         },
       },
-      costTrend: toTimeseries(costTrend, "sum_totalCost"),
-      tracesTrend: toTimeseries(tracesTrend, "count"),
+      costTrend,
+      tracesTrend,
     };
 
-    const ttl = isHistorical(to) ? 3_600_000 : 300_000;
+    const ttl = isHistorical(to) ? 3_600_000 : 1_800_000;
     cache.set(cacheKey, response, ttl);
 
     return c.json(response);
   });
 
   return app;
-}
-
-function sumMetric(res: LangfuseMetricsResponse, field: string): number {
-  return res.data.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
-}
-
-function firstMetric(res: LangfuseMetricsResponse, field: string): number {
-  return Number(res.data[0]?.[field]) || 0;
-}
-
-function toTimeseries(
-  res: LangfuseMetricsResponse,
-  field: string,
-): TimeseriesPoint[] {
-  return res.data.map((row) => ({
-    timestamp: String(row["time_dimension"] ?? row["time"] ?? row["date"] ?? ""),
-    value: Number(row[field]) || 0,
-  }));
 }
 
 function isHistorical(to: string): boolean {

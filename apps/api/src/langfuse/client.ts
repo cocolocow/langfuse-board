@@ -18,6 +18,28 @@ export interface LangfuseTracesResponse {
   data: LangfuseTrace[];
 }
 
+export interface LangfuseDailyUsage {
+  model: string;
+  inputUsage: number;
+  outputUsage: number;
+  totalUsage: number;
+  countTraces: number;
+  countObservations: number;
+  totalCost: number;
+}
+
+export interface LangfuseDailyRow {
+  date: string;
+  countTraces: number;
+  countObservations: number;
+  totalCost: number;
+  usage: LangfuseDailyUsage[];
+}
+
+export interface LangfuseDailyResponse {
+  data: LangfuseDailyRow[];
+}
+
 export interface LangfuseClientConfig {
   host: string;
   publicKey: string;
@@ -58,6 +80,36 @@ export class LangfuseClient {
     }
 
     return response.json() as Promise<LangfuseMetricsResponse>;
+  }
+
+  async getDailyMetrics(params: {
+    from?: string;
+    to?: string;
+    traceName?: string;
+  } = {}): Promise<LangfuseDailyResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.from) searchParams.set("fromTimestamp", params.from);
+    if (params.to) searchParams.set("toTimestamp", params.to);
+    if (params.traceName) searchParams.set("traceName", params.traceName);
+
+    const url = `${this.baseUrl}/api/public/metrics/daily?${searchParams}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: this.authHeader,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error("Rate limited by Langfuse API");
+      }
+      const body = await response.text();
+      throw new Error(`Langfuse API error ${response.status}: ${body}`);
+    }
+
+    return response.json() as Promise<LangfuseDailyResponse>;
   }
 
   async listTraces(limit = 30): Promise<LangfuseTracesResponse> {

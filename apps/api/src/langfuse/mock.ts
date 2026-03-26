@@ -138,12 +138,70 @@ export function createMockLangfuseClient(): LangfuseClient {
       await new Promise((r) => setTimeout(r, randomBetween(50, 200)));
       return handleQuery(query);
     },
+    getDailyMetrics: async (params: { from?: string; to?: string } = {}) => {
+      await new Promise((r) => setTimeout(r, randomBetween(30, 100)));
+      return { data: generateMockDailyMetrics(params.from, params.to) };
+    },
     listTraces: async (limit = 30) => {
       await new Promise((r) => setTimeout(r, randomBetween(20, 80)));
       return { data: generateMockTraces(limit) };
     },
     healthCheck: async () => true,
   } as LangfuseClient;
+}
+
+function generateMockDailyMetrics(from?: string, to?: string) {
+  const start = from ? new Date(from) : new Date(Date.now() - 30 * 86400000);
+  const end = to ? new Date(to) : new Date();
+  const rows = [];
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    rows.push({
+      date: d.toISOString().split("T")[0]!,
+      countTraces: Math.round(randomBetween(400, 800)),
+      countObservations: Math.round(randomBetween(800, 1600)),
+      totalCost: randomBetween(60, 130),
+      usage: [
+        {
+          model: "claude-sonnet-4-20250514",
+          inputUsage: Math.round(randomBetween(300000, 600000)),
+          outputUsage: Math.round(randomBetween(80000, 200000)),
+          totalUsage: Math.round(randomBetween(400000, 800000)),
+          countTraces: Math.round(randomBetween(150, 300)),
+          countObservations: Math.round(randomBetween(200, 400)),
+          totalCost: randomBetween(25, 55),
+        },
+        {
+          model: "gpt-4o",
+          inputUsage: Math.round(randomBetween(200000, 400000)),
+          outputUsage: Math.round(randomBetween(50000, 150000)),
+          totalUsage: Math.round(randomBetween(250000, 550000)),
+          countTraces: Math.round(randomBetween(100, 200)),
+          countObservations: Math.round(randomBetween(150, 300)),
+          totalCost: randomBetween(18, 40),
+        },
+        {
+          model: "gpt-4o-mini",
+          inputUsage: Math.round(randomBetween(500000, 1000000)),
+          outputUsage: Math.round(randomBetween(150000, 400000)),
+          totalUsage: Math.round(randomBetween(650000, 1400000)),
+          countTraces: Math.round(randomBetween(200, 400)),
+          countObservations: Math.round(randomBetween(300, 600)),
+          totalCost: randomBetween(8, 20),
+        },
+        {
+          model: "claude-haiku-4-5-20251001",
+          inputUsage: Math.round(randomBetween(600000, 1200000)),
+          outputUsage: Math.round(randomBetween(200000, 500000)),
+          totalUsage: Math.round(randomBetween(800000, 1700000)),
+          countTraces: Math.round(randomBetween(250, 500)),
+          countObservations: Math.round(randomBetween(350, 700)),
+          totalCost: randomBetween(5, 15),
+        },
+      ],
+    });
+  }
+  return rows;
 }
 
 const MOCK_FEATURES = [

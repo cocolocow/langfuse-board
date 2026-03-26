@@ -1,23 +1,13 @@
 import { Hono } from "hono";
 import type { LangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
-import {
-  dateRangeSchema,
-  aggregateUsageByModel,
-} from "@langfuse-board/shared";
-import {
-  costTotalQuery,
-  tracesTrendQuery,
-  tokensTrendQuery,
-  usageByModelQuery,
-  usageByUserQuery,
-} from "../langfuse/queries.js";
+import { dateRangeSchema } from "@langfuse-board/shared";
 import type {
   UsageResponse,
-  LangfuseMetricsResponse,
   TimeseriesPoint,
   TopUser,
 } from "@langfuse-board/shared";
+import type { ModelUsage } from "@langfuse-board/shared";
 
 export function createUsageRoutes(
   langfuse: LangfuseClient,
@@ -31,89 +21,99 @@ export function createUsageRoutes(
       return c.json({ error: "Invalid query params", details: parsed.error.issues }, 400);
     }
 
-    const { from, to, granularity } = parsed.data;
-    const cacheKey = `usage:${from}:${to}:${granularity}`;
+    const { from, to } = parsed.data;
+    const cacheKey = `usage:${from}:${to}`;
 
     const cached = cache.get<UsageResponse>(cacheKey);
     if (cached) return c.json(cached);
 
-    const params = { from, to, granularity };
+    // Daily Metrics API — zero metrics quota
+    const daily = await langfuse.getDailyMetrics({ from, to });
 
-    const [totals, tracesTrend, tokensTrend, byModel, byUser] =
-      await Promise.all([
-        langfuse.queryMetrics(costTotalQuery(params)),
-        langfuse.queryMetrics(tracesTrendQuery(params)),
-        langfuse.queryMetrics(tokensTrendQuery(params)),
-        langfuse.queryMetrics(usageByModelQuery(params)),
-        langfuse.queryMetrics(usageByUserQuery(params)),
-      ]);
+    let totalTraces = 0;
+    let totalTokens = 0;
+    const tracesTrend: TimeseriesPoint[] = [];
+    const tokensTrend: TimeseriesPoint[] = [];
+    const modelMap = new Map<string, { tokens: number; traces: number; cost: number }>();
 
-    const totalTracesValue = sumMetric(totals, "count");
-    const totalTokensValue = sumMetric(totals, "sum_totalTokens") ||
-      byModel.data.reduce((s, r) => s + (Number(r["sum_totalTokens"]) || 0), 0);
+    for (const row of daily.data) {
+      totalTraces += row.countTraces ?? 0;
+      tracesTrend.push({ timestamp: row.date, value: row.countTraces ?? 0 });
 
-    const uniqueUsers = new Set(
-      byUser.data.map((r) => String(r["userId"])).filter((u) => u && u !== "null"),
-    );
+      let dayTokens = 0;
+      for (const usage of row.usage ?? []) {
+        dayTokens += usage.totalUsage ?? 0;
+        const entry = modelMap.get(usage.model) ?? { tokens: 0, traces: 0, cost: 0 };
+        entry.tokens += usage.totalUsage ?? 0;
+        entry.traces += usage.countTraces ?? 0;
+        entry.cost += usage.totalCost ?? 0;
+        modelMap.set(usage.model, entry);
+      }
+      totalTokens += dayTokens;
+      tokensTrend.push({ timestamp: row.date, value: dayTokens });
+    }
 
-    const topUsers: TopUser[] = byUser.data
-      .filter((r) => r["userId"] && String(r["userId"]) !== "null")
-      .slice(0, 10)
-      .map((r) => ({
-        userId: String(r["userId"]),
-        traces: Number(r["count"]) || 0,
-        cost: Number(r["sum_totalCost"]) || 0,
-      }));
+    const topModels: ModelUsage[] = Array.from(modelMap.entries())
+      .map(([model, data]) => ({ model, ...data }))
+      .sort((a, b) => b.tokens - a.tokens);
+
+    // Top users from traces API (no metrics quota)
+    let topUsers: TopUser[] = [];
+    let activeUsersCount = 0;
+    try {
+      const traces = await langfuse.listTraces(200);
+      const userMap = new Map<string, { traces: number; cost: number }>();
+      for (const trace of traces.data) {
+        if (!trace.userId) continue;
+        const entry = userMap.get(trace.userId) ?? { traces: 0, cost: 0 };
+        entry.traces++;
+        entry.cost += trace.totalCost ?? 0;
+        userMap.set(trace.userId, entry);
+      }
+      activeUsersCount = userMap.size;
+      topUsers = Array.from(userMap.entries())
+        .map(([userId, data]) => ({ userId, ...data }))
+        .sort((a, b) => b.traces - a.traces)
+        .slice(0, 10);
+    } catch {
+      // Graceful degradation
+    }
 
     const response: UsageResponse = {
       totalTraces: {
         label: "Total Requests",
-        value: totalTracesValue,
+        value: totalTraces,
         previousValue: null,
         unit: "number",
         trend: null,
       },
       totalTokens: {
         label: "Words Processed",
-        value: totalTokensValue,
+        value: totalTokens,
         previousValue: null,
         unit: "number",
         trend: null,
       },
       activeUsers: {
         label: "Active Users",
-        value: uniqueUsers.size,
+        value: activeUsersCount,
         previousValue: null,
         unit: "number",
         trend: null,
       },
-      tracesTrend: toTimeseries(tracesTrend, "count"),
-      tokensTrend: toTimeseries(tokensTrend, "sum_totalTokens"),
+      tracesTrend,
+      tokensTrend,
       topUsers,
-      topModels: aggregateUsageByModel(byModel.data),
+      topModels,
     };
 
-    const ttl = isHistorical(to) ? 3_600_000 : 300_000;
+    const ttl = isHistorical(to) ? 3_600_000 : 1_800_000;
     cache.set(cacheKey, response, ttl);
 
     return c.json(response);
   });
 
   return app;
-}
-
-function sumMetric(res: LangfuseMetricsResponse, field: string): number {
-  return res.data.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
-}
-
-function toTimeseries(
-  res: LangfuseMetricsResponse,
-  field: string,
-): TimeseriesPoint[] {
-  return res.data.map((row) => ({
-    timestamp: String(row["time_dimension"] ?? row["time"] ?? row["date"] ?? ""),
-    value: Number(row[field]) || 0,
-  }));
 }
 
 function isHistorical(to: string): boolean {

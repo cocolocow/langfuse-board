@@ -1,50 +1,55 @@
 import { describe, it, expect } from "vitest";
-import { createTestApp, defaultQuery, queryKey } from "./helpers.js";
-import type { LangfuseMetricsResponse } from "@langfuse-board/shared";
+import { InMemoryCache } from "../../cache/memory.js";
+import { createApp } from "../../app.js";
+import { DEFAULT_CONFIG } from "../../config/board.js";
+import type { LangfuseClient } from "../../langfuse/client.js";
 
-const mockData: Record<string, LangfuseMetricsResponse> = {
-  "traces:none:sum_totalCost,count_count": {
-    data: [{ sum_totalCost: 100, count: 500 }],
-  },
-  "traces:none:sum_totalCost_t:day": {
-    data: [
-      { time_dimension: "2024-01-01", sum_totalCost: 20 },
-      { time_dimension: "2024-01-02", sum_totalCost: 30 },
-    ],
-  },
-  "observations:providedModelName:sum_totalCost,sum_totalTokens": {
-    data: [
-      { providedModelName: "gpt-4", sum_totalCost: 80, sum_totalTokens: 50000 },
-      { providedModelName: "gpt-3.5", sum_totalCost: 20, sum_totalTokens: 200000 },
-    ],
-  },
-  "traces:name:sum_totalCost,sum_totalTokens": {
-    data: [
-      { name: "chat", sum_totalCost: 60, sum_totalTokens: 100000 },
-      { name: "search", sum_totalCost: 40, sum_totalTokens: 150000 },
-    ],
-  },
-};
+function createCostsTestApp() {
+  const langfuse = {
+    queryMetrics: async () => ({ data: [] }),
+    getDailyMetrics: async () => ({
+      data: [
+        {
+          date: "2024-01-15",
+          countTraces: 500,
+          countObservations: 1000,
+          totalCost: 100,
+          usage: [
+            { model: "gpt-4", inputUsage: 100000, outputUsage: 30000, totalUsage: 130000, countTraces: 300, countObservations: 600, totalCost: 80 },
+            { model: "gpt-3.5", inputUsage: 200000, outputUsage: 60000, totalUsage: 260000, countTraces: 200, countObservations: 400, totalCost: 20 },
+          ],
+        },
+      ],
+    }),
+    listTraces: async () => ({ data: [] }),
+    healthCheck: async () => true,
+  } as LangfuseClient;
+
+  const cache = new InMemoryCache();
+  return createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG });
+}
+
+const q = "?from=2024-01-15T00:00:00Z&to=2024-01-15T23:59:59Z";
 
 describe("GET /api/costs", () => {
-  it("returns cost breakdown and trends", async () => {
-    const { app } = createTestApp((q) => mockData[queryKey(q)] ?? { data: [] });
+  it("returns cost breakdown from daily API", async () => {
+    const app = createCostsTestApp();
+    const res = await app.request(`/api/costs${q}`);
 
-    const res = await app.request(`/api/costs${defaultQuery}`);
     expect(res.status).toBe(200);
-
     const body = await res.json();
+
     expect(body.total.value).toBe(100);
     expect(body.total.unit).toBe("currency");
     expect(body.byModel).toHaveLength(2);
     expect(body.byModel[0].name).toBe("gpt-4");
-    expect(body.byTraceName).toHaveLength(2);
-    expect(body.trend).toHaveLength(2);
+    expect(body.byModel[0].cost).toBe(80);
+    expect(body.trend).toHaveLength(1);
     expect(body.projected.value).toBeGreaterThan(0);
   });
 
   it("returns 400 for missing params", async () => {
-    const { app } = createTestApp(() => ({ data: [] }));
+    const app = createCostsTestApp();
     const res = await app.request("/api/costs");
     expect(res.status).toBe(400);
   });

@@ -9,6 +9,20 @@ export function createMockLangfuse(
 ): LangfuseClient {
   return {
     queryMetrics: async (query: LangfuseMetricsQuery) => handler(query),
+    getDailyMetrics: async () => ({
+      data: [
+        {
+          date: "2024-01-15",
+          countTraces: 500,
+          countObservations: 1000,
+          totalCost: 42.5,
+          usage: [
+            { model: "gpt-4", inputUsage: 100000, outputUsage: 30000, totalUsage: 130000, countTraces: 300, countObservations: 600, totalCost: 30 },
+            { model: "gpt-3.5", inputUsage: 200000, outputUsage: 60000, totalUsage: 260000, countTraces: 200, countObservations: 400, totalCost: 12.5 },
+          ],
+        },
+      ],
+    }),
     listTraces: async () => ({ data: [] }),
     healthCheck: async () => true,
   } as LangfuseClient;
