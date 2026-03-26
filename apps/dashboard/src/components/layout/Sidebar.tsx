@@ -5,7 +5,7 @@ const navItems = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/costs", label: "Costs", icon: DollarSign },
   { href: "/usage", label: "Usage", icon: Users },
-  { href: "/quality", label: "Quality", icon: Activity },
+  { href: "/quality", label: "Performance", icon: Activity },
 ];
 
 export function Sidebar() {

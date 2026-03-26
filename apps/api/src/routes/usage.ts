@@ -67,14 +67,14 @@ export function createUsageRoutes(
 
     const response: UsageResponse = {
       totalTraces: {
-        label: "Total Traces",
+        label: "Total Requests",
         value: totalTracesValue,
         previousValue: null,
         unit: "number",
         trend: null,
       },
       totalTokens: {
-        label: "Total Tokens",
+        label: "Words Processed",
         value: totalTokensValue,
         previousValue: null,
         unit: "number",

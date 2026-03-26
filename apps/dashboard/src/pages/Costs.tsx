@@ -48,7 +48,7 @@ export function Costs() {
             tokens: t.tokens,
           }))}
           columns={[
-            { key: "name", label: "Trace" },
+            { key: "name", label: "Feature" },
             {
               key: "cost",
               label: "Cost",
@@ -62,7 +62,7 @@ export function Costs() {
               render: (v) => `${(v as number).toFixed(1)}%`,
             },
           ]}
-          title="Cost by Trace"
+          title="Cost by Feature"
         />
       </div>
     </div>

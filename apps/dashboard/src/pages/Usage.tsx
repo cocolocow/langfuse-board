@@ -26,13 +26,13 @@ export function Usage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TrendChart
           data={data.tracesTrend}
-          title="Traces / Day"
+          title="Requests / Day"
           color="#6366f1"
           formatter={(v) => formatTokens(v)}
         />
         <TrendChart
           data={data.tokensTrend}
-          title="Tokens / Day"
+          title="Words Processed / Day"
           color="#34d399"
           formatter={(v) => formatTokens(v)}
         />
@@ -44,7 +44,7 @@ export function Usage() {
             name: m.model,
             value: m.tokens,
           }))}
-          title="Tokens by Model"
+          title="Words by Model"
           formatter={(v) => formatTokens(v)}
         />
         <DataTable

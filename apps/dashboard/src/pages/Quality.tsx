@@ -14,7 +14,7 @@ export function Quality() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-foreground">Quality</h1>
+      <h1 className="text-lg font-semibold text-foreground">Performance</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <KpiCard data={data.avgLatency} />
@@ -24,7 +24,7 @@ export function Quality() {
 
       <TrendChart
         data={data.latencyTrend}
-        title="Average Latency"
+        title="Average Response Time"
         color="#fbbf24"
         formatter={(v) => formatLatency(v)}
       />

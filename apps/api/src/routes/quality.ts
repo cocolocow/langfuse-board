@@ -51,14 +51,14 @@ export function createQualityRoutes(
 
     const response: QualityResponse = {
       avgLatency: {
-        label: "Avg Latency",
+        label: "Avg Response Time",
         value: avgLatencyValue,
         previousValue: null,
         unit: "duration",
         trend: null,
       },
       p95Latency: {
-        label: "P95 Latency",
+        label: "Slowest 5%",
         value: p95LatencyValue,
         previousValue: null,
         unit: "duration",

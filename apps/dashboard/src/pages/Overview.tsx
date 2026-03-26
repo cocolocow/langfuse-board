@@ -31,7 +31,7 @@ export function Overview() {
         />
         <TrendChart
           data={data.tracesTrend}
-          title="Traces / Day"
+          title="Requests / Day"
           color="#818cf8"
           formatter={(v) => formatTokens(v)}
         />

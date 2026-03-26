@@ -57,14 +57,14 @@ export function createOverviewRoutes(
           trend: null,
         },
         totalTraces: {
-          label: "Total Traces",
+          label: "Total Requests",
           value: totalTracesValue,
           previousValue: null,
           unit: "number",
           trend: null,
         },
         avgLatency: {
-          label: "Avg Latency",
+          label: "Avg Response Time",
           value: avgLatencyValue,
           previousValue: null,
           unit: "duration",
