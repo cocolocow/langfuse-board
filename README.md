@@ -1,39 +1,38 @@
 # langfuse-board
 
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/cocolocow/langfuse-board/actions/workflows/ci.yml/badge.svg)](https://github.com/cocolocow/langfuse-board/actions/workflows/ci.yml)
+
 The executive dashboard for LLM observability. Plug into your Langfuse instance and get a beautiful, CEO-friendly view of your AI costs, usage, and quality.
 
 **Built for people who don't want to read traces.**
 
+<!-- TODO: Add screenshot here -->
+<!-- ![langfuse-board screenshot](docs/screenshot.png) -->
+
 ## Features
 
-- **Cost Overview** — Total spend, daily trends, projections, breakdown by model and trace
-- **Usage Analytics** — Active users, traces/day, token consumption, top users
+- **Cost Overview** — Total spend, daily trends, monthly projections, breakdown by model
+- **Usage Analytics** — Active users, requests/day, token consumption, top users
 - **Quality Metrics** — Average & P95 latency, error rates, quality scores
-- **Smart Caching** — Respects Langfuse API rate limits with intelligent TTL-based caching
-- **Dark Theme** — Electric Indigo neon aesthetic, designed for large screens
+- **Live Feed** — Real-time stream of traces with status, cost, and custom dimensions
+- **Custom Dimensions** — Configure breakdowns by any Langfuse metadata field
+- **Smart Caching** — Stays within Langfuse API rate limits (works on the free plan)
+- **Dark Theme** — Electric Indigo aesthetic, designed for large screens
 
 ## Quick Start
 
 ### Demo mode (no Langfuse needed)
 
 ```bash
-git clone https://github.com/your-username/langfuse-board.git
+git clone https://github.com/cocolocow/langfuse-board.git
 cd langfuse-board
 cp .env.example .env
 pnpm install
+pnpm dev
 ```
 
-The `.env` already has `LANGFUSE_MOCK=true` — start and see realistic demo data:
-
-```bash
-# Terminal 1: API
-pnpm --filter @langfuse-board/api dev
-
-# Terminal 2: Dashboard
-pnpm --filter @langfuse-board/dashboard dev
-```
-
-Open http://localhost:3000
+Open http://localhost:3000 — you'll see the dashboard with realistic mock data.
 
 ### Connect to Langfuse
 
@@ -45,6 +44,8 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 LANGFUSE_PUBLIC_KEY=pk-lf-your-key
 LANGFUSE_SECRET_KEY=sk-lf-your-key
 ```
+
+Then `pnpm dev` again.
 
 ### Docker
 
@@ -65,10 +66,10 @@ langfuse-board/
 
 **Data flow:**
 ```
-Langfuse → API (cache 5min/1h) → Dashboard (React Query)
+Langfuse → API (cached) → Dashboard (React Query)
 ```
 
-The API caches responses to stay within Langfuse rate limits (100-2000 calls/day depending on plan).
+The API caches responses to stay within Langfuse rate limits — works on the free plan (100 calls/day).
 
 ## Tech Stack
 
@@ -88,33 +89,34 @@ The API caches responses to stay within Langfuse rate limits (100-2000 calls/day
 
 ```bash
 pnpm install
-pnpm test          # Run all tests
-pnpm test:unit     # Unit tests only
+pnpm dev               # Start API + Dashboard
+pnpm test              # Run all tests
+pnpm test:unit         # Unit tests only
 pnpm test:integration  # Integration tests
-pnpm dev           # Start everything
+pnpm typecheck         # TypeScript checks
 ```
 
 ## API Endpoints
 
-All endpoints accept `?from=ISO&to=ISO&granularity=day|week|month`
+All endpoints accept `?from=ISO&to=ISO`
 
 | Endpoint | Description |
 |----------|-------------|
 | `GET /api/overview` | KPI cards + trend charts |
-| `GET /api/costs` | Cost breakdown by model/trace |
+| `GET /api/costs` | Cost breakdown by model |
 | `GET /api/usage` | Users, traces, tokens |
 | `GET /api/quality` | Latency, errors, scores |
+| `GET /api/feed` | Live trace feed |
+| `GET /api/breakdown` | Breakdown by custom dimension |
+| `GET /api/config` | Board configuration |
 | `GET /api/health` | API + Langfuse status |
 
 ## Contributing
 
-1. Fork the repo
-2. Create a branch (`git checkout -b feature/something`)
-3. Write tests first, then implement
-4. Make sure all tests pass (`pnpm test`)
-5. Commit with a clear message
-6. Open a PR
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, conventions, and how to submit a PR.
+
+Looking for a place to start? Check out the [good first issues](https://github.com/cocolocow/langfuse-board/labels/good%20first%20issue).
 
 ## License
 
-MIT
+[MIT](LICENSE)
