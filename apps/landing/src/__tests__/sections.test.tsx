@@ -94,7 +94,8 @@ describe("Pricing", () => {
 
   it("renders Cloud card with Coming Soon label", () => {
     render(<Pricing />);
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument();
+    const matches = screen.getAllByText(/coming soon/i);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Cloud")).toBeInTheDocument();
   });
 

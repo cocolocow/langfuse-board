@@ -72,10 +72,7 @@ export function Pricing() {
               Cloud
             </div>
             <div className="mt-2 text-4xl font-bold">
-              <span className="text-foreground-secondary">$</span>TBD
-              <span className="ml-2 text-base font-normal text-muted">
-                / month
-              </span>
+              Coming soon
             </div>
             <p className="mt-2 text-sm text-foreground-secondary">
               We host it. You get a link. Your CEO bookmarks it.
