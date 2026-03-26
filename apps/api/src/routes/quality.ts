@@ -94,7 +94,7 @@ function toTimeseries(
   field: string,
 ): TimeseriesPoint[] {
   return res.data.map((row) => ({
-    timestamp: String(row["time"] ?? row["date"] ?? ""),
+    timestamp: String(row["time_dimension"] ?? row["time"] ?? row["date"] ?? ""),
     value: Number(row[field]) || 0,
   }));
 }

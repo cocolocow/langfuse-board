@@ -123,7 +123,7 @@ export function usageByUserQuery(p: QueryParams): LangfuseMetricsQuery {
     ],
     fromTimestamp: p.from,
     toTimestamp: p.to,
-    orderBy: [{ field: "count", direction: "desc" }],
+    orderBy: [{ field: "count_count", direction: "desc" }],
   };
 }
 

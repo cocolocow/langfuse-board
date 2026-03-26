@@ -8,8 +8,8 @@ const mockData: Record<string, LangfuseMetricsResponse> = {
   },
   "traces:none:avg_latency,p95_latency_t:day": {
     data: [
-      { time: "2024-01-01", avg_latency: 1000, p95_latency: 3000 },
-      { time: "2024-01-02", avg_latency: 1400, p95_latency: 4000 },
+      { time_dimension: "2024-01-01", avg_latency: 1000, p95_latency: 3000 },
+      { time_dimension: "2024-01-02", avg_latency: 1400, p95_latency: 4000 },
     ],
   },
   "scores-numeric:name:avg_value,count_count": {

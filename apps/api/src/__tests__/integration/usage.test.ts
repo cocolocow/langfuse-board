@@ -8,14 +8,14 @@ const mockData: Record<string, LangfuseMetricsResponse> = {
   },
   "traces:none:count_count_t:day": {
     data: [
-      { time: "2024-01-01", count: 100 },
-      { time: "2024-01-02", count: 200 },
+      { time_dimension: "2024-01-01", count: 100 },
+      { time_dimension: "2024-01-02", count: 200 },
     ],
   },
   "traces:none:sum_totalTokens_t:day": {
     data: [
-      { time: "2024-01-01", sum_totalTokens: 50000 },
-      { time: "2024-01-02", sum_totalTokens: 80000 },
+      { time_dimension: "2024-01-01", sum_totalTokens: 50000 },
+      { time_dimension: "2024-01-02", sum_totalTokens: 80000 },
     ],
   },
   "observations:providedModelName:sum_totalTokens,sum_totalCost,count_count": {

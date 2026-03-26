@@ -13,14 +13,14 @@ function generateDailyData(
   to: string,
   baseValue: number,
   variance: number,
-): { time: string; value: number }[] {
+): { time_dimension: string; value: number }[] {
   const start = new Date(from);
   const end = new Date(to);
-  const days: { time: string; value: number }[] = [];
+  const days: { time_dimension: string; value: number }[] = [];
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     days.push({
-      time: d.toISOString().split("T")[0]!,
+      time_dimension: d.toISOString().split("T")[0]!,
       value: randomBetween(baseValue - variance, baseValue + variance),
     });
   }
@@ -42,19 +42,19 @@ function handleQuery(query: LangfuseMetricsQuery): LangfuseMetricsResponse {
   // Cost trend
   if (query.view === "traces" && metrics.includes("sum_totalCost") && hasTime && dims.length === 0) {
     const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 95, 35);
-    return { data: days.map((d) => ({ time: d.time, sum_totalCost: d.value })) };
+    return { data: days.map((d) => ({ time: d.time_dimension, sum_totalCost: d.value })) };
   }
 
   // Traces trend
   if (query.view === "traces" && metrics.includes("count_count") && hasTime && dims.length === 0) {
     const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 600, 200);
-    return { data: days.map((d) => ({ time: d.time, count: Math.round(d.value) })) };
+    return { data: days.map((d) => ({ time: d.time_dimension, count: Math.round(d.value) })) };
   }
 
   // Tokens trend
   if (query.view === "traces" && metrics.includes("sum_totalTokens") && hasTime) {
     const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 1500000, 500000);
-    return { data: days.map((d) => ({ time: d.time, sum_totalTokens: Math.round(d.value) })) };
+    return { data: days.map((d) => ({ time: d.time_dimension, sum_totalTokens: Math.round(d.value) })) };
   }
 
   // Latency (non-trend)
@@ -69,7 +69,7 @@ function handleQuery(query: LangfuseMetricsQuery): LangfuseMetricsResponse {
     const days = generateDailyData(query.fromTimestamp, query.toTimestamp, 1300, 400);
     return {
       data: days.map((d) => ({
-        time: d.time,
+        time: d.time_dimension,
         avg_latency: d.value,
         p95_latency: d.value * 2.8,
       })),
