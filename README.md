@@ -3,9 +3,9 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/cocolocow/langfuse-board/actions/workflows/ci.yml/badge.svg)](https://github.com/cocolocow/langfuse-board/actions/workflows/ci.yml)
 
-The executive dashboard for LLM observability. Plug into your Langfuse instance and get a beautiful, CEO-friendly view of your AI costs, usage, and quality.
+**Connect your Langfuse. Get a dashboard your CEO can actually read.**
 
-**Built for people who don't want to read traces.**
+Your AI costs, usage, and quality — in one screen, no traces, no jargon. Built for the people who pay for the AI, not the people who build it.
 
 <!-- TODO: Add screenshot here -->
 <!-- ![langfuse-board screenshot](docs/screenshot.png) -->
