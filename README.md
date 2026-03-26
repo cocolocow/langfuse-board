@@ -2,6 +2,7 @@
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/cocolocow/langfuse-board/actions/workflows/ci.yml/badge.svg)](https://github.com/cocolocow/langfuse-board/actions/workflows/ci.yml)
+[![Website](https://img.shields.io/badge/website-live-accent.svg)](https://langfuse-board-landing.vercel.app)
 
 **Connect your Langfuse. Get a dashboard your CEO can actually read.**
 
