@@ -19,15 +19,15 @@ export function Usage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-foreground">Usage</h1>
+      <h1 className="text-[15px] font-semibold text-foreground">Usage</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <KpiCard data={data.totalTraces} />
         <KpiCard data={data.totalTokens} />
         <KpiCard data={data.activeUsers} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <TrendChart
           data={data.tracesTrend}
           title="Requests / Day"
@@ -37,13 +37,13 @@ export function Usage() {
         <TrendChart
           data={data.tokensTrend}
           title="Words Processed / Day"
-          color="#34d399"
+          color="#10b981"
           formatter={(v) => formatTokens(v)}
         />
       </div>
 
       {breakdownDimensions.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {breakdownDimensions.map((dim) => (
             <BreakdownCard key={dim.key} dimensionKey={dim.key} label={dim.label} />
           ))}

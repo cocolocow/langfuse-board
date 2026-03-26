@@ -11,18 +11,19 @@ export function Overview() {
   if (error) return <ErrorState message={error.message} />;
   if (!data) return null;
 
+  const kpis = [data.kpis.totalCost, data.kpis.totalTraces, data.kpis.avgLatency, data.kpis.errorRate];
+
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-foreground">Overview</h1>
+      <h1 className="text-[15px] font-semibold text-foreground">Overview</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard data={data.kpis.totalCost} />
-        <KpiCard data={data.kpis.totalTraces} />
-        <KpiCard data={data.kpis.avgLatency} />
-        <KpiCard data={data.kpis.errorRate} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi, i) => (
+          <KpiCard key={kpi.label} data={kpi} index={i} />
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <TrendChart
           data={data.costTrend}
           title="Cost Trend"

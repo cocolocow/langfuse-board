@@ -21,39 +21,43 @@ function formatKpiValue(kpi: KpiData): string {
   }
 }
 
-export function KpiCard({ data }: { data: KpiData }) {
+export function KpiCard({ data, index = 0 }: { data: KpiData; index?: number }) {
   const trendIcon =
     data.trend?.direction === "up" ? (
-      <TrendingUp className="h-3.5 w-3.5" />
+      <TrendingUp className="h-3 w-3" />
     ) : data.trend?.direction === "down" ? (
-      <TrendingDown className="h-3.5 w-3.5" />
+      <TrendingDown className="h-3 w-3" />
     ) : (
-      <Minus className="h-3.5 w-3.5" />
+      <Minus className="h-3 w-3" />
     );
+
+  const isNegativeMetric =
+    data.label.toLowerCase().includes("cost") ||
+    data.label.toLowerCase().includes("error");
 
   const trendColor =
     data.trend?.direction === "up"
-      ? data.label.toLowerCase().includes("cost") || data.label.toLowerCase().includes("error")
-        ? "text-negative"
-        : "text-positive"
+      ? isNegativeMetric ? "text-negative" : "text-positive"
       : data.trend?.direction === "down"
-        ? data.label.toLowerCase().includes("cost") || data.label.toLowerCase().includes("error")
-          ? "text-positive"
-          : "text-negative"
+        ? isNegativeMetric ? "text-positive" : "text-negative"
         : "text-muted";
 
   return (
-    <div className="animate-fade-in rounded-xl border border-border bg-surface p-5 transition-shadow hover:shadow-glow-sm">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted">
+    <div
+      className="glass-card animate-fade-in p-5 transition-all duration-300"
+      style={{ animationDelay: `${index * 0.06}s`, animationFillMode: "both" }}
+    >
+      <p className="text-[11px] font-medium uppercase tracking-widest text-muted">
         {data.label}
       </p>
-      <p className="mt-2 font-mono text-2xl font-semibold text-foreground">
+      <p className="mt-3 font-mono text-[26px] font-semibold leading-none tracking-tight text-foreground">
         {formatKpiValue(data)}
       </p>
       {data.trend && (
-        <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${trendColor}`}>
+        <div className={`mt-3 flex items-center gap-1.5 text-[11px] font-medium ${trendColor}`}>
           {trendIcon}
           <span>{Math.abs(data.trend.delta).toFixed(1)}%</span>
+          <span className="text-muted">vs prev</span>
         </div>
       )}
     </div>

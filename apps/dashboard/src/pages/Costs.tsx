@@ -19,9 +19,9 @@ export function Costs() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-foreground">Costs</h1>
+      <h1 className="text-[15px] font-semibold text-foreground">Costs</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <KpiCard data={data.total} />
         <KpiCard data={data.projected} />
       </div>
@@ -33,7 +33,7 @@ export function Costs() {
         formatter={(v) => formatCost(v)}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {breakdownDimensions.map((dim) => (
           <BreakdownCard key={dim.key} dimensionKey={dim.key} label={dim.label} />
         ))}
