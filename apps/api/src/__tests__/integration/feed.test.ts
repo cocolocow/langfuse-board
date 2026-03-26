@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
+import { DEFAULT_CONFIG } from "../../config/board.js";
 import type { LangfuseClient } from "../../langfuse/client.js";
 
 function createFeedTestApp() {
@@ -15,6 +16,7 @@ function createFeedTestApp() {
           userId: "alice@company.com",
           latency: 1.2,
           totalCost: 0.05,
+          metadata: { account_id: "acme" },
           observations: [{ model: "gpt-4o", level: "DEFAULT" }],
         },
         {
@@ -24,6 +26,7 @@ function createFeedTestApp() {
           userId: "bob@company.com",
           latency: 2.5,
           totalCost: 0.12,
+          metadata: null,
           observations: [{ model: "claude-sonnet-4-20250514", level: "ERROR" }],
         },
       ].slice(0, limit),
@@ -32,7 +35,7 @@ function createFeedTestApp() {
   } as LangfuseClient;
 
   const cache = new InMemoryCache();
-  return { app: createApp(langfuse, cache), cache };
+  return { app: createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG }), cache };
 }
 
 describe("GET /api/feed", () => {

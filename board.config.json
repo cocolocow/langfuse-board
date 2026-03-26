@@ -1,0 +1,9 @@
+{
+  "name": "langfuse-board",
+  "dimensions": [
+    { "key": "userId", "label": "User", "source": "trace", "show": ["feed", "breakdown"] },
+    { "key": "account_id", "label": "Account", "source": "metadata", "show": ["feed", "breakdown"] },
+    { "key": "user_name", "label": "Name", "source": "metadata", "show": ["feed"] },
+    { "key": "plan", "label": "Plan", "source": "metadata", "show": ["feed", "filter"] }
+  ]
+}

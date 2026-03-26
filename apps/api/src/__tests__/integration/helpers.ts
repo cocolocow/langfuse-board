@@ -1,22 +1,27 @@
-import type { LangfuseMetricsQuery, LangfuseMetricsResponse } from "@langfuse-board/shared";
+import type { LangfuseMetricsQuery, LangfuseMetricsResponse, BoardConfig } from "@langfuse-board/shared";
 import type { LangfuseClient } from "../../langfuse/client.js";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
+import { DEFAULT_CONFIG } from "../../config/board.js";
 
 export function createMockLangfuse(
   handler: (query: LangfuseMetricsQuery) => LangfuseMetricsResponse,
 ): LangfuseClient {
   return {
     queryMetrics: async (query: LangfuseMetricsQuery) => handler(query),
+    listTraces: async () => ({ data: [] }),
     healthCheck: async () => true,
   } as LangfuseClient;
 }
 
-export function createTestApp(handler: (query: LangfuseMetricsQuery) => LangfuseMetricsResponse) {
+export function createTestApp(
+  handler: (query: LangfuseMetricsQuery) => LangfuseMetricsResponse,
+  boardConfig?: BoardConfig,
+) {
   const langfuse = createMockLangfuse(handler);
   const cache = new InMemoryCache();
-  const app = createApp(langfuse, cache);
-  return { app, cache };
+  const app = createApp({ langfuse, cache, boardConfig: boardConfig ?? DEFAULT_CONFIG });
+  return { app, cache, langfuse };
 }
 
 export const defaultQuery = "?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z";

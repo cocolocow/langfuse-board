@@ -31,6 +31,15 @@ export type {
   HealthResponse,
 } from "./types/api.js";
 
+export type {
+  DimensionSource,
+  DimensionShow,
+  Dimension,
+  BoardConfig,
+  DiagnosticField,
+  DiagnosticResponse,
+} from "./types/config.js";
+
 // Transformers
 export {
   formatCost,
