@@ -173,6 +173,13 @@ const MOCK_USERS = [
   "frank@company.com",
 ];
 
+const MOCK_ACCOUNTS = [
+  { id: "acme-corp", name: "Acme Corp", plan: "enterprise" },
+  { id: "beta-inc", name: "Beta Inc", plan: "pro" },
+  { id: "gamma-io", name: "Gamma.io", plan: "pro" },
+  { id: "delta-labs", name: "Delta Labs", plan: "starter" },
+];
+
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]!;
 }
@@ -194,13 +201,24 @@ function generateMockTraces(count: number): LangfuseTrace[] {
         ? randomBetween(0.001, 0.02)
         : randomBetween(0.01, 0.15);
 
+    const userId = Math.random() < 0.9 ? pick(MOCK_USERS) : null;
+    const account = pick(MOCK_ACCOUNTS);
+    const userName = userId ? userId.split("@")[0]! : null;
+
     traces.push({
       id: `trace-${traceCounter}`,
       timestamp: new Date(now - ageMs).toISOString(),
       name: pick(MOCK_FEATURES),
-      userId: Math.random() < 0.9 ? pick(MOCK_USERS) : null,
+      userId,
       latency,
       totalCost: cost,
+      metadata: {
+        account_id: account.id,
+        account_name: account.name,
+        user_name: userName ? userName.charAt(0).toUpperCase() + userName.slice(1) : null,
+        plan: account.plan,
+        model,
+      },
       observations: [
         {
           model,

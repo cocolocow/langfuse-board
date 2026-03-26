@@ -1,4 +1,5 @@
 import { useFeed } from "../hooks/use-dashboard-data.js";
+import { useConfig } from "../hooks/use-config.js";
 import { Loader, ErrorState } from "../components/Loader.js";
 import { formatCost, formatLatency, formatTimeAgo } from "@langfuse-board/shared";
 import type { FeedItem } from "@langfuse-board/shared";
@@ -19,38 +20,15 @@ function StatusBadge({ status }: { status: FeedItem["status"] }) {
   );
 }
 
-function FeedRow({ item }: { item: FeedItem }) {
-  return (
-    <tr className="animate-fade-in border-b border-border/50 transition-colors last:border-0 hover:bg-surface-hover">
-      <td className="py-3 text-xs text-muted">
-        {formatTimeAgo(item.timestamp)}
-      </td>
-      <td className="py-3 text-sm">
-        {item.userId ?? <span className="text-muted">anonymous</span>}
-      </td>
-      <td className="py-3 text-sm text-accent">{item.name}</td>
-      <td className="py-3 font-mono text-xs text-muted">
-        {item.model ?? "—"}
-      </td>
-      <td className="py-3 text-right font-mono text-sm">
-        {formatLatency(item.latencyMs)}
-      </td>
-      <td className="py-3 text-right font-mono text-sm">
-        {formatCost(item.cost)}
-      </td>
-      <td className="py-3 text-right">
-        <StatusBadge status={item.status} />
-      </td>
-    </tr>
-  );
-}
-
 export function Feed() {
   const { data, isLoading, error } = useFeed();
+  const { data: config } = useConfig();
 
   if (isLoading) return <Loader />;
   if (error) return <ErrorState message={error.message} />;
   if (!data) return null;
+
+  const feedDimensions = config?.dimensions.filter((d) => d.show.includes("feed")) ?? [];
 
   return (
     <div className="space-y-6">
@@ -70,36 +48,50 @@ export function Feed() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
-                  When
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
-                  User
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
-                  Feature
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
-                  Model
-                </th>
-                <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
-                  Response Time
-                </th>
-                <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
-                  Cost
-                </th>
-                <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
-                  Status
-                </th>
+                <Th>When</Th>
+                <Th>Feature</Th>
+                {feedDimensions.map((dim) => (
+                  <Th key={dim.key}>{dim.label}</Th>
+                ))}
+                <Th align="right">Response Time</Th>
+                <Th align="right">Cost</Th>
+                <Th align="right">Status</Th>
               </tr>
             </thead>
-            <tbody className="px-5">
+            <tbody>
               {data.items.map((item) => (
-                <FeedRow key={item.id} item={item} />
+                <tr
+                  key={item.id}
+                  className="animate-fade-in border-b border-border/50 transition-colors last:border-0 hover:bg-surface-hover"
+                >
+                  <td className="px-5 py-3 text-xs text-muted">
+                    {formatTimeAgo(item.timestamp)}
+                  </td>
+                  <td className="px-5 py-3 text-sm text-accent">{item.name}</td>
+                  {feedDimensions.map((dim) => (
+                    <td key={dim.key} className="px-5 py-3 text-sm">
+                      {item.dimensions[dim.key] ?? (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                  ))}
+                  <td className="px-5 py-3 text-right font-mono text-sm">
+                    {formatLatency(item.latencyMs)}
+                  </td>
+                  <td className="px-5 py-3 text-right font-mono text-sm">
+                    {formatCost(item.cost)}
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <StatusBadge status={item.status} />
+                  </td>
+                </tr>
               ))}
               {data.items.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-muted">
+                  <td
+                    colSpan={3 + feedDimensions.length + 3}
+                    className="py-12 text-center text-muted"
+                  >
                     <Radio className="mx-auto mb-2 h-8 w-8 opacity-40" />
                     <p>No requests yet</p>
                     <p className="mt-1 text-xs">
@@ -113,5 +105,23 @@ export function Feed() {
         </div>
       </div>
     </div>
+  );
+}
+
+function Th({
+  children,
+  align = "left",
+}: {
+  children: React.ReactNode;
+  align?: "left" | "right";
+}) {
+  return (
+    <th
+      className={`px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
+    >
+      {children}
+    </th>
   );
 }

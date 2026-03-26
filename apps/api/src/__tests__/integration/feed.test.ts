@@ -1,10 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { InMemoryCache } from "../../cache/memory.js";
 import { createApp } from "../../app.js";
-import { DEFAULT_CONFIG } from "../../config/board.js";
 import type { LangfuseClient } from "../../langfuse/client.js";
+import type { BoardConfig } from "@langfuse-board/shared";
 
-function createFeedTestApp() {
+const testConfig: BoardConfig = {
+  name: "Test",
+  dimensions: [
+    { key: "userId", label: "User", source: "trace", show: ["feed", "breakdown"] },
+    { key: "account_id", label: "Account", source: "metadata", show: ["feed", "breakdown"] },
+    { key: "user_name", label: "Name", source: "metadata", show: ["feed"] },
+  ],
+};
+
+function createFeedTestApp(config?: BoardConfig) {
   const langfuse = {
     queryMetrics: async () => ({ data: [] }),
     listTraces: async (limit: number) => ({
@@ -16,7 +25,7 @@ function createFeedTestApp() {
           userId: "alice@company.com",
           latency: 1.2,
           totalCost: 0.05,
-          metadata: { account_id: "acme" },
+          metadata: { account_id: "acme", user_name: "Alice", plan: "pro" },
           observations: [{ model: "gpt-4o", level: "DEFAULT" }],
         },
         {
@@ -26,7 +35,7 @@ function createFeedTestApp() {
           userId: "bob@company.com",
           latency: 2.5,
           totalCost: 0.12,
-          metadata: null,
+          metadata: { account_id: "beta" },
           observations: [{ model: "claude-sonnet-4-20250514", level: "ERROR" }],
         },
       ].slice(0, limit),
@@ -35,11 +44,11 @@ function createFeedTestApp() {
   } as LangfuseClient;
 
   const cache = new InMemoryCache();
-  return { app: createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG }), cache };
+  return { app: createApp({ langfuse, cache, boardConfig: config ?? testConfig }), cache };
 }
 
 describe("GET /api/feed", () => {
-  it("returns feed items with correct shape", async () => {
+  it("returns feed items with dimensions from config", async () => {
     const { app } = createFeedTestApp();
 
     const res = await app.request("/api/feed");
@@ -50,12 +59,25 @@ describe("GET /api/feed", () => {
 
     const first = body.items[0];
     expect(first.id).toBe("trace-1");
-    expect(first.userId).toBe("alice@company.com");
     expect(first.name).toBe("chat-completion");
-    expect(first.model).toBe("gpt-4o");
     expect(first.latencyMs).toBe(1200);
     expect(first.cost).toBe(0.05);
     expect(first.status).toBe("success");
+
+    expect(first.dimensions.userId).toBe("alice@company.com");
+    expect(first.dimensions.account_id).toBe("acme");
+    expect(first.dimensions.user_name).toBe("Alice");
+  });
+
+  it("returns null for missing metadata dimensions", async () => {
+    const { app } = createFeedTestApp();
+
+    const res = await app.request("/api/feed");
+    const body = await res.json();
+
+    const second = body.items[1];
+    expect(second.dimensions.account_id).toBe("beta");
+    expect(second.dimensions.user_name).toBeNull();
   });
 
   it("detects error status from observations", async () => {
@@ -74,5 +96,15 @@ describe("GET /api/feed", () => {
     const body = await res.json();
 
     expect(body.items).toHaveLength(1);
+  });
+
+  it("returns empty dimensions when no config dimensions", async () => {
+    const emptyConfig: BoardConfig = { name: "Empty", dimensions: [] };
+    const { app } = createFeedTestApp(emptyConfig);
+
+    const res = await app.request("/api/feed");
+    const body = await res.json();
+
+    expect(body.items[0].dimensions).toEqual({});
   });
 });

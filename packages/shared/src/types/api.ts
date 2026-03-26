@@ -56,12 +56,11 @@ export interface QualityResponse {
 export interface FeedItem {
   id: string;
   timestamp: string;
-  userId: string | null;
   name: string;
-  model: string | null;
   latencyMs: number;
   cost: number;
   status: "success" | "error";
+  dimensions: Record<string, string | null>;
 }
 
 export interface FeedResponse {
