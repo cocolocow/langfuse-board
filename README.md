@@ -7,8 +7,9 @@
 
 Your AI costs, usage, and quality — in one screen, no traces, no jargon. Built for the people who pay for the AI, not the people who build it.
 
-<!-- TODO: Add screenshot here -->
-<!-- ![langfuse-board screenshot](docs/screenshot.png) -->
+![langfuse-board overview](docs/screenshot-overview.png)
+
+![langfuse-board costs](docs/screenshot-costs.png)
 
 ## Features
 
