@@ -10,6 +10,23 @@ Your AI costs, usage, and quality — in one screen, no traces, no jargon. Built
 
 **[View website](https://langfuse-board-landing.vercel.app)**
 
+## How it works
+
+Your app calls AI models (GPT-4, Claude, etc.). [Langfuse](https://langfuse.com) records every call — what was sent, what came back, how long it took, how much it cost. It's the open-source standard for LLM observability.
+
+The problem: Langfuse is built for engineers. langfuse-board reads that same data and turns it into a dashboard anyone can understand.
+
+```
+┌─────────┐     ┌───────────┐     ┌─────────────────┐     ┌──────────────┐
+│ Your App │────▶│  Langfuse  │────▶│  langfuse-board  │────▶│  CEO-friendly │
+│ (LLMs)  │     │ (tracking) │     │   (dashboard)    │     │    screen    │
+└─────────┘     └───────────┘     └─────────────────┘     └──────────────┘
+                  engineers           ← this repo →          non-technical
+                  use this                                   people read this
+```
+
+Don't have Langfuse yet? [Get started here](https://langfuse.com/docs/get-started) — it takes 5 minutes.
+
 ![langfuse-board overview](docs/screenshot-overview.png)
 
 ![langfuse-board costs](docs/screenshot-costs.png)
