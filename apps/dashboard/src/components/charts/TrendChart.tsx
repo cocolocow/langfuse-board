@@ -14,6 +14,7 @@ interface TrendChartProps {
   title: string;
   color?: string;
   formatter?: (value: number) => string;
+  isLoading?: boolean;
 }
 
 function formatDate(timestamp: string): string {
@@ -26,8 +27,20 @@ export function TrendChart({
   title,
   color = "#6366f1",
   formatter = (v) => String(v),
+  isLoading = false,
 }: TrendChartProps) {
   const gradientId = `grad-${title.replace(/\s/g, "-")}`;
+
+  if (isLoading) {
+    return (
+      <div className="glass-card p-5 animate-pulse">
+        <h3 className="mb-5 text-[11px] font-medium uppercase tracking-widest text-muted">
+          {title}
+        </h3>
+        <div className="h-[220px] w-full rounded bg-surface-elevated" />
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card animate-fade-in p-5">
