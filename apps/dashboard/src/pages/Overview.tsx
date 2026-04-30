@@ -1,13 +1,12 @@
 import { useOverview } from "../hooks/use-dashboard-data.js";
 import { KpiCard } from "../components/cards/KpiCard.js";
 import { TrendChart } from "../components/charts/TrendChart.js";
-import { Loader, ErrorState } from "../components/Loader.js";
+import { ErrorState } from "../components/Loader.js";
 import { formatCost, formatTokens } from "@langfuse-board/shared";
 
 export function Overview() {
   const { data, isLoading, error } = useOverview();
 
-  // if (isLoading) return <Loader />;
   if (error) return <ErrorState error={error} />;
   if (!data && !isLoading) return null;
 
@@ -19,7 +18,7 @@ export function Overview() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi, i) => (
-          <KpiCard key={kpi.label} data={kpi} index={i} isLoading={isLoading} />
+          <KpiCard key={kpi?.label ?? i} data={kpi} index={i} isLoading={isLoading} />
         ))}
       </div>
 
