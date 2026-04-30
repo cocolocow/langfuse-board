@@ -7,11 +7,11 @@ import { formatCost, formatTokens } from "@langfuse-board/shared";
 export function Overview() {
   const { data, isLoading, error } = useOverview();
 
-  if (isLoading) return <Loader />;
+  // if (isLoading) return <Loader />;
   if (error) return <ErrorState error={error} />;
-  if (!data) return null;
+  if (!data && !isLoading) return null;
 
-  const kpis = [data.kpis.totalCost, data.kpis.totalTraces, data.kpis.avgLatency, data.kpis.errorRate];
+  const kpis = data ? [data.kpis.totalCost, data.kpis.totalTraces, data.kpis.avgLatency, data.kpis.errorRate] : Array(4).fill(null);
 
   return (
     <div className="space-y-6">
@@ -19,22 +19,24 @@ export function Overview() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi, i) => (
-          <KpiCard key={kpi.label} data={kpi} index={i} />
+          <KpiCard key={kpi.label} data={kpi} index={i} isLoading={isLoading} />
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <TrendChart
-          data={data.costTrend}
+          data={data?.costTrend ?? []}
           title="Cost Trend"
           color="#6366f1"
           formatter={(v) => formatCost(v)}
+          isLoading={isLoading}
         />
         <TrendChart
-          data={data.tracesTrend}
+          data={data?.tracesTrend ?? []}
           title="Requests / Day"
           color="#818cf8"
           formatter={(v) => formatTokens(v)}
+          isLoading={isLoading}
         />
       </div>
     </div>
