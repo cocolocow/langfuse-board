@@ -1,10 +1,12 @@
 import type { KpiData } from "@langfuse-board/shared";
+
 import {
   formatCost,
   formatLatency,
   formatTokens,
 } from "@langfuse-board/shared";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+
 
 function formatKpiValue(kpi: KpiData): string {
   switch (kpi.unit) {
@@ -21,7 +23,21 @@ function formatKpiValue(kpi: KpiData): string {
   }
 }
 
-export function KpiCard({ data, index = 0 }: { data: KpiData; index?: number }) {
+export function KpiCard({ data, index = 0, isLoading = false }: { data: KpiData | null; index?: number; isLoading?: boolean }) {
+
+  if (isLoading || !data) {
+    return (
+      <div
+        className="glass-card p-5 animate-pulse"
+        style={{ animationDelay: `${index * 0.06}s`, animationFillMode: "both" }}
+      >
+        <div className="h-2.5 w-16 rounded bg-surface-elevated" />
+        <div className="mt-4 h-6 w-24 rounded bg-surface-elevated" />
+        <div className="mt-3 h-3 w-20 rounded bg-surface-elevated" />
+      </div>
+    );
+  }
+
   const trendIcon =
     data.trend?.direction === "up" ? (
       <TrendingUp className="h-3 w-3" />
@@ -41,6 +57,9 @@ export function KpiCard({ data, index = 0 }: { data: KpiData; index?: number }) 
       : data.trend?.direction === "down"
         ? isNegativeMetric ? "text-positive" : "text-negative"
         : "text-muted";
+
+
+
 
   return (
     <div
