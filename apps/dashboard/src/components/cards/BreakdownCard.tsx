@@ -1,12 +1,22 @@
 import { useBreakdown } from "../../hooks/use-dashboard-data.js";
 import { DistributionChart } from "../charts/DistributionChart.js";
 import { formatCost } from "@langfuse-board/shared";
-import { Loader, ErrorState } from "../Loader.js";
+import { ErrorState } from "../Loader.js";
 
 export function BreakdownCard({ dimensionKey, label }: { dimensionKey: string; label: string }) {
   const { data, isLoading, error } = useBreakdown(dimensionKey);
 
-  if (isLoading) return <Loader />;
+  if (isLoading) {
+    return (
+      <div className="animate-pulse rounded-xl border border-border bg-surface p-5">
+        <h3 className="mb-4 text-sm font-medium text-muted">
+          Cost by {label}
+        </h3>
+        <div className="h-[200px] w-full rounded bg-surface-elevated" />
+      </div>
+    );
+  }
+
   if (error) return <ErrorState message={error.message} />;
   if (!data || data.items.length === 0) {
     return (
