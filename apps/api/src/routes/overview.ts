@@ -89,7 +89,7 @@ export function createOverviewRoutes(
       tracesTrend,
     };
 
-    const ttl = isHistorical(to) ? 3_600_000 : 1_800_000;
+    const ttl = isHistorical(to) ? 86_400_000 : 7_200_000;
     cache.set(cacheKey, response, ttl);
 
     return c.json(response);

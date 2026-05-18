@@ -92,8 +92,9 @@ export function createQualityRoutes(
       scores,
     };
 
-    // Cache 30min — reduce metrics API calls
-    const ttl = isHistorical(to) ? 3_600_000 : 1_800_000;
+    // Aggressive cache to stay within Langfuse free-tier daily quota (100 calls/day):
+    // historical = 24h (data is frozen), live = 2h (acceptable staleness for a CEO dashboard)
+    const ttl = isHistorical(to) ? 86_400_000 : 7_200_000;
     cache.set(cacheKey, response, ttl);
 
     return c.json(response);

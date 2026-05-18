@@ -78,7 +78,8 @@ export function createFeedRoutes(
     });
 
     const response: FeedResponse = { items };
-    cache.set(cacheKey, response, 300_000);
+    // Cache 30min: feed is "live" but we trade freshness for fewer Langfuse calls (free-tier 100/day cap)
+    cache.set(cacheKey, response, 1_800_000);
 
     return c.json(response);
   });

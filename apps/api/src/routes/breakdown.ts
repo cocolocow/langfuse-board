@@ -57,7 +57,7 @@ export function createBreakdownRoutes(
       items,
     };
 
-    const ttl = isHistorical(to) ? 3_600_000 : 300_000;
+    const ttl = isHistorical(to) ? 86_400_000 : 3_600_000;
     cache.set(cacheKey, response, ttl);
 
     return c.json(response);

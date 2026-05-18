@@ -24,7 +24,8 @@ export function createConfigRoutes(
     const traces = await langfuse.listTraces(100);
     const diagnostic = extractDiagnosticFields(traces.data, boardConfig);
 
-    cache.set(cacheKey, diagnostic, 1_800_000);
+    // Cache 24h: detected fields change rarely (only when new metadata keys are emitted)
+    cache.set(cacheKey, diagnostic, 86_400_000);
 
     return c.json(diagnostic);
   });
