@@ -18,7 +18,12 @@ const langfuse = config.LANGFUSE_MOCK
       secretKey: config.LANGFUSE_SECRET_KEY,
     });
 
-const cache = new InMemoryCache();
+const cache = new InMemoryCache({
+  // Persist to a JSON file at repo root so the cache survives board restarts.
+  // Critical when Langfuse free-tier is rate-limited: the dashboard still has
+  // the last known snapshot to display via the stale fallback.
+  persistTo: process.env.CACHE_FILE ?? resolve(import.meta.dirname, "../../../.langfuse-board-cache.json"),
+});
 const app = createApp({ langfuse, cache, boardConfig });
 
 const mode = config.LANGFUSE_MOCK ? " (mock data)" : "";
