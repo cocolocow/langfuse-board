@@ -66,11 +66,19 @@ export function createFeedRoutes(
         dimensions[dim.key] = extractDimension(trace, dim);
       }
 
+      // Langfuse computes latency from observation start/end timestamps. When
+      // our trace_generation creates and ends an observation immediately, the
+      // SDK reports latency ≈ 0. Fall back to the duration_s we already put
+      // in metadata so the feed shows real timings.
+      const metaDuration = Number(trace.metadata?.duration_s ?? 0);
+      const latencyMs =
+        (trace.latency ?? 0) * 1000 || (Number.isFinite(metaDuration) ? metaDuration * 1000 : 0);
+
       return {
         id: trace.id,
         timestamp: trace.timestamp,
         name: trace.name ?? "unknown",
-        latencyMs: (trace.latency ?? 0) * 1000,
+        latencyMs,
         cost: trace.totalCost ?? 0,
         status: hasError ? "error" : "success",
         dimensions,

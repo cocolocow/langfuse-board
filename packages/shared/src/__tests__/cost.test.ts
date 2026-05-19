@@ -13,8 +13,14 @@ describe("formatCost", () => {
     expect(formatCost(0)).toBe("$0.00");
   });
 
-  it("formats small amounts", () => {
-    expect(formatCost(0.005)).toBe("$0.01");
+  it("formats sub-cent amounts with 6 decimals so per-call costs are visible", () => {
+    expect(formatCost(0.005)).toBe("$0.005000");
+    expect(formatCost(0.000001)).toBe("$0.000001");
+  });
+
+  it("formats sub-dollar amounts with 4 decimals", () => {
+    expect(formatCost(0.5)).toBe("$0.5000");
+    expect(formatCost(0.075)).toBe("$0.0750");
   });
 
   it("formats regular amounts", () => {

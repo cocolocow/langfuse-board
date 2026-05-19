@@ -4,9 +4,21 @@ import type { LangfuseMetricsRow } from "../types/langfuse.js";
 export function formatCost(amount: number): string {
   const isNegative = amount < 0;
   const abs = Math.abs(amount);
+  // Adaptive precision: a single LLM call can cost a fraction of a cent
+  // ($0.0035), while a monthly total is in dollars. Rounding everything
+  // to 2 decimals turned every per-call cost into "$0.00".
+  let minDigits = 2;
+  let maxDigits = 2;
+  if (abs > 0 && abs < 0.01) {
+    minDigits = 6;
+    maxDigits = 6;
+  } else if (abs > 0 && abs < 1) {
+    minDigits = 4;
+    maxDigits = 4;
+  }
   const formatted = abs.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: maxDigits,
   });
   return isNegative ? `-$${formatted}` : `$${formatted}`;
 }
