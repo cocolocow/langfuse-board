@@ -25,7 +25,7 @@ function groupByProvider(models: CostBreakdown[]): { name: string; value: number
   const providers = new Map<string, number>();
 
   for (const model of models) {
-    const name = model.name.toLowerCase();
+    const name = (model.name ?? "unknown").toLowerCase();
     let provider = "Other";
 
     for (const [prefix, providerName] of Object.entries(PROVIDER_MAP)) {

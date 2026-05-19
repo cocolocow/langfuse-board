@@ -41,10 +41,14 @@ export function createCostsRoutes(
       trend.push({ timestamp: row.date, value: row.totalCost ?? 0 });
 
       for (const usage of row.usage ?? []) {
-        const entry = modelCosts.get(usage.model) ?? { cost: 0, tokens: 0 };
+        // Langfuse can return usage entries with a null model (eg. Perplexity calls
+        // we trace with no `model` field). Coerce to "unknown" so the frontend never
+        // sees a null name and crashes on `.toLowerCase()`.
+        const modelName = usage.model ?? "unknown";
+        const entry = modelCosts.get(modelName) ?? { cost: 0, tokens: 0 };
         entry.cost += usage.totalCost ?? 0;
         entry.tokens += usage.totalUsage ?? 0;
-        modelCosts.set(usage.model, entry);
+        modelCosts.set(modelName, entry);
       }
     }
 
