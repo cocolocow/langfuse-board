@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
+import { serveOrStale } from "../cache/with-stale-fallback.js";
 import type { BoardConfig, Dimension } from "@langfuse-board/shared";
 import { dateRangeSchema } from "@langfuse-board/shared";
 
@@ -44,21 +45,20 @@ export function createBreakdownRoutes(
     }
 
     const cacheKey = `breakdown:${key}:${from}:${to}`;
-    const cached = cache.get<BreakdownResponse>(cacheKey);
-    if (cached) return c.json(cached);
-
-    const items =
-      dim.source === "trace"
-        ? await breakdownByTraceField(langfuse, dim, from, to)
-        : await breakdownByMetadata(langfuse, dim, from, to);
-
-    const response: BreakdownResponse = {
-      dimension: { key: dim.key, label: dim.label },
-      items,
-    };
-
     const ttl = isHistorical(to) ? 86_400_000 : 3_600_000;
-    cache.set(cacheKey, response, ttl);
+
+    const response = await serveOrStale(c, cache, cacheKey, ttl, async () => {
+      const items =
+        dim.source === "trace"
+          ? await breakdownByTraceField(langfuse, dim, from, to)
+          : await breakdownByMetadata(langfuse, dim, from, to);
+
+      const fresh: BreakdownResponse = {
+        dimension: { key: dim.key, label: dim.label },
+        items,
+      };
+      return fresh;
+    });
 
     return c.json(response);
   });

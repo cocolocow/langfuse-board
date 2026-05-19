@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { ILangfuseClient, LangfuseTrace } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
+import { serveOrStale } from "../cache/with-stale-fallback.js";
 import type { FeedItem, FeedResponse, BoardConfig, Dimension } from "@langfuse-board/shared";
 
 const feedQuerySchema = z.object({
@@ -50,9 +51,7 @@ export function createFeedRoutes(
     const { limit } = parsed.data;
     const cacheKey = `feed:${limit}`;
 
-    const cached = cache.get<FeedResponse>(cacheKey);
-    if (cached) return c.json(cached);
-
+    const response = await serveOrStale(c, cache, cacheKey, 1_800_000, async () => {
     const traces = await langfuse.listTraces(limit);
 
     const items: FeedItem[] = traces.data.map((trace) => {
@@ -85,9 +84,10 @@ export function createFeedRoutes(
       };
     });
 
-    const response: FeedResponse = { items };
+    const fresh: FeedResponse = { items };
     // Cache 30min: feed is "live" but we trade freshness for fewer Langfuse calls (free-tier 100/day cap)
-    cache.set(cacheKey, response, 1_800_000);
+      return fresh;
+    });
 
     return c.json(response);
   });

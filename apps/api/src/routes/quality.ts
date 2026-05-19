@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
+import { serveOrStale } from "../cache/with-stale-fallback.js";
 import { dateRangeSchema } from "@langfuse-board/shared";
 import type {
   QualityResponse,
@@ -21,10 +22,11 @@ export function createQualityRoutes(
 
     const { from, to } = parsed.data;
     const cacheKey = `quality:${from}:${to}`;
+    // Aggressive cache to stay within Langfuse free-tier daily quota (100 calls/day):
+    // historical = 24h (data is frozen), live = 2h (acceptable staleness for a CEO dashboard)
+    const ttl = isHistorical(to) ? 86_400_000 : 7_200_000;
 
-    const cached = cache.get<QualityResponse>(cacheKey);
-    if (cached) return c.json(cached);
-
+    const response = await serveOrStale(c, cache, cacheKey, ttl, async () => {
     // Only 2 Metrics API calls — the minimum needed
     let avgLatency = 0;
     let p95Latency = 0;
@@ -65,7 +67,7 @@ export function createQualityRoutes(
       // Rate limited — show zeros, user can retry later
     }
 
-    const response: QualityResponse = {
+    const fresh: QualityResponse = {
       avgLatency: {
         label: "Avg Response Time",
         value: avgLatency,
@@ -91,11 +93,8 @@ export function createQualityRoutes(
       latencyByModel: {},
       scores,
     };
-
-    // Aggressive cache to stay within Langfuse free-tier daily quota (100 calls/day):
-    // historical = 24h (data is frozen), live = 2h (acceptable staleness for a CEO dashboard)
-    const ttl = isHistorical(to) ? 86_400_000 : 7_200_000;
-    cache.set(cacheKey, response, ttl);
+      return fresh;
+    });
 
     return c.json(response);
   });

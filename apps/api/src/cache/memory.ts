@@ -7,10 +7,13 @@ interface CacheEntry<T> {
 
 export class InMemoryCache implements CacheStore {
   private store = new Map<string, CacheEntry<unknown>>();
-  private purgeInterval: ReturnType<typeof setInterval>;
+  private purgeInterval: ReturnType<typeof setInterval> | null = null;
 
-  constructor(purgeIntervalMs = 60_000) {
-    this.purgeInterval = setInterval(() => this.purge(), purgeIntervalMs);
+  // Note: auto-purge is intentionally disabled. Expired entries stay in memory
+  // so getStale() can serve them when Langfuse 429s. Memory pressure is not a
+  // concern here — at most a few dozen distinct cache keys (route × date range).
+  constructor(_purgeIntervalMs = 60_000) {
+    // Kept for API compatibility but no longer scheduled.
   }
 
   get<T>(key: string): T | undefined {
@@ -18,11 +21,17 @@ export class InMemoryCache implements CacheStore {
     if (!entry) return undefined;
 
     if (Date.now() >= entry.expiresAt) {
-      this.store.delete(key);
+      // Don't delete — keep the value around so getStale() can serve it
+      // as a fallback when Langfuse rate-limits us. The purge loop has been
+      // disabled for the same reason.
       return undefined;
     }
 
     return entry.data as T;
+  }
+
+  getStale<T>(key: string): T | undefined {
+    return (this.store.get(key)?.data as T | undefined) ?? undefined;
   }
 
   set<T>(key: string, value: T, ttlMs: number): void {
@@ -45,21 +54,11 @@ export class InMemoryCache implements CacheStore {
   }
 
   size(): number {
-    this.purge();
     return this.store.size;
   }
 
   destroy(): void {
-    clearInterval(this.purgeInterval);
+    if (this.purgeInterval) clearInterval(this.purgeInterval);
     this.clear();
-  }
-
-  private purge(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.store) {
-      if (now >= entry.expiresAt) {
-        this.store.delete(key);
-      }
-    }
   }
 }

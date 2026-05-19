@@ -70,12 +70,17 @@ describe("InMemoryCache", () => {
     expect(cache.size()).toBe(1);
   });
 
-  it("purges expired entries periodically", () => {
+  it("keeps expired entries available via getStale (stale-while-error)", () => {
     cache.set("a", 1, 2_000);
     cache.set("b", 2, 120_000);
 
     vi.advanceTimersByTime(60_001);
-    expect(cache.size()).toBe(1);
+    // get() honours TTL — "a" is expired so returns undefined
+    expect(cache.get("a")).toBeUndefined();
     expect(cache.get("b")).toBe(2);
+    // getStale() ignores TTL — "a" is still there as a fallback
+    expect(cache.getStale("a")).toBe(1);
+    // size() reports everything, expired or not (auto-purge is off)
+    expect(cache.size()).toBe(2);
   });
 });

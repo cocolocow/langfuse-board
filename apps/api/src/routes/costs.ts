@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
+import { serveOrStale } from "../cache/with-stale-fallback.js";
 import {
   dateRangeSchema,
   projectMonthlyCost,
@@ -25,10 +26,9 @@ export function createCostsRoutes(
 
     const { from, to } = parsed.data;
     const cacheKey = `costs:${from}:${to}`;
+    const ttl = isHistorical(to) ? 86_400_000 : 7_200_000;
 
-    const cached = cache.get<CostsResponse>(cacheKey);
-    if (cached) return c.json(cached);
-
+    const response = await serveOrStale(c, cache, cacheKey, ttl, async () => {
     // Daily Metrics API — zero metrics quota cost
     const daily = await langfuse.getDailyMetrics({ from, to });
 
@@ -63,7 +63,7 @@ export function createCostsRoutes(
       }))
       .sort((a, b) => b.cost - a.cost);
 
-    const response: CostsResponse = {
+    const fresh: CostsResponse = {
       total: {
         label: "Total Cost",
         value: totalCost,
@@ -83,9 +83,8 @@ export function createCostsRoutes(
       trend,
       trendByModel: {},
     };
-
-    const ttl = isHistorical(to) ? 86_400_000 : 7_200_000;
-    cache.set(cacheKey, response, ttl);
+      return fresh;
+    });
 
     return c.json(response);
   });
