@@ -3,6 +3,7 @@ import type { CacheStore } from "./store.js";
 interface CacheEntry<T> {
   data: T;
   expiresAt: number;
+  cachedAt: number;
 }
 
 export class InMemoryCache implements CacheStore {
@@ -35,10 +36,16 @@ export class InMemoryCache implements CacheStore {
   }
 
   set<T>(key: string, value: T, ttlMs: number): void {
+    const now = Date.now();
     this.store.set(key, {
       data: value,
-      expiresAt: Date.now() + ttlMs,
+      expiresAt: now + ttlMs,
+      cachedAt: now,
     });
+  }
+
+  getCachedAt(key: string): number | undefined {
+    return this.store.get(key)?.cachedAt;
   }
 
   has(key: string): boolean {

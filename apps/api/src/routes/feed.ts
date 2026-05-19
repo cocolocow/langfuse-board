@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { ILangfuseClient, LangfuseTrace } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
-import { serveOrStale } from "../cache/with-stale-fallback.js";
+import { serveOrStale, isForceRefresh } from "../cache/with-stale-fallback.js";
 import type { FeedItem, FeedResponse, BoardConfig, Dimension } from "@langfuse-board/shared";
 
 const feedQuerySchema = z.object({
@@ -87,7 +87,7 @@ export function createFeedRoutes(
     const fresh: FeedResponse = { items };
     // Cache 30min: feed is "live" but we trade freshness for fewer Langfuse calls (free-tier 100/day cap)
       return fresh;
-    });
+    }, { force: isForceRefresh(c) });
 
     return c.json(response);
   });

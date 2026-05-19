@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
-import { serveOrStale } from "../cache/with-stale-fallback.js";
+import { serveOrStale, isForceRefresh } from "../cache/with-stale-fallback.js";
 import type { BoardConfig, Dimension } from "@langfuse-board/shared";
 import { dateRangeSchema } from "@langfuse-board/shared";
 
@@ -58,7 +58,7 @@ export function createBreakdownRoutes(
         items,
       };
       return fresh;
-    });
+    }, { force: isForceRefresh(c) });
 
     return c.json(response);
   });

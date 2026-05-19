@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { ILangfuseClient } from "../langfuse/client.js";
 import type { CacheStore } from "../cache/store.js";
-import { serveOrStale } from "../cache/with-stale-fallback.js";
+import { serveOrStale, isForceRefresh } from "../cache/with-stale-fallback.js";
 import type { BoardConfig } from "@langfuse-board/shared";
 import { extractDiagnosticFields } from "../config/diagnostic.js";
 
@@ -22,7 +22,7 @@ export function createConfigRoutes(
     const diagnostic = await serveOrStale(c, cache, cacheKey, 86_400_000, async () => {
       const traces = await langfuse.listTraces(100);
       return extractDiagnosticFields(traces.data, boardConfig);
-    });
+    }, { force: isForceRefresh(c) });
     return c.json(diagnostic);
   });
 
