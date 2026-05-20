@@ -3,6 +3,31 @@ import type {
   LangfuseMetricsResponse,
 } from "@langfuse-board/shared";
 
+/** Thrown when Langfuse returns 429. Carries the retry-after value (in seconds)
+ * from the response header so the frontend can show a precise countdown to the
+ * user instead of a vague "rate limit reached" wall. */
+export class LangfuseRateLimitError extends Error {
+  retryAfterSeconds: number | null;
+  constructor(retryAfterSeconds: number | null = null) {
+    super("Rate limited by Langfuse API");
+    this.name = "LangfuseRateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+function parseRetryAfter(response: Response): number | null {
+  const raw = response.headers.get("retry-after");
+  if (!raw) return null;
+  const asInt = parseInt(raw, 10);
+  if (Number.isFinite(asInt) && asInt >= 0) return asInt;
+  // RFC also allows HTTP-date format; parse as date diff if so
+  const asDate = Date.parse(raw);
+  if (!Number.isNaN(asDate)) {
+    return Math.max(0, Math.round((asDate - Date.now()) / 1000));
+  }
+  return null;
+}
+
 export interface LangfuseTrace {
   id: string;
   timestamp: string;
@@ -79,7 +104,7 @@ export class LangfuseClient implements ILangfuseClient {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error("Rate limited by Langfuse API");
+        throw new LangfuseRateLimitError(parseRetryAfter(response));
       }
       const body = await response.text();
       throw new Error(
@@ -111,7 +136,7 @@ export class LangfuseClient implements ILangfuseClient {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error("Rate limited by Langfuse API");
+        throw new LangfuseRateLimitError(parseRetryAfter(response));
       }
       const body = await response.text();
       throw new Error(`Langfuse API error ${response.status}: ${body}`);
@@ -136,7 +161,7 @@ export class LangfuseClient implements ILangfuseClient {
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error("Rate limited by Langfuse API");
+        throw new LangfuseRateLimitError(parseRetryAfter(response));
       }
       const body = await response.text();
       throw new Error(`Langfuse API error ${response.status}: ${body}`);

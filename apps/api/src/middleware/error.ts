@@ -1,8 +1,21 @@
 import type { ErrorHandler } from "hono";
+import { LangfuseRateLimitError } from "../langfuse/client.js";
 
 export const errorHandler: ErrorHandler = (err, c) => {
   console.error(`[error] ${err.message}`);
 
+  if (err instanceof LangfuseRateLimitError) {
+    if (err.retryAfterSeconds != null) {
+      c.header("X-Retry-After-Seconds", String(err.retryAfterSeconds));
+      c.header("Retry-After", String(err.retryAfterSeconds));
+    }
+    return c.json(
+      { error: "Langfuse rate limit exceeded", retryAfterSeconds: err.retryAfterSeconds },
+      429,
+    );
+  }
+
+  // Defensive fallback for any other "Rate limited"-shaped error
   if (err.message.includes("Rate limited")) {
     return c.json({ error: "Langfuse rate limit exceeded" }, 429);
   }

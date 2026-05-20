@@ -1,6 +1,16 @@
 import { AlertCircle, Clock } from "lucide-react";
 import { RateLimitError } from "../api/client.js";
 
+function formatRetryDuration(seconds: number): string {
+  if (seconds <= 0) return "à l'instant";
+  if (seconds < 60) return `dans ${seconds}s`;
+  const min = Math.floor(seconds / 60);
+  if (min < 60) return `dans ${min} min`;
+  const hours = Math.floor(min / 60);
+  const remMin = min % 60;
+  return remMin > 0 ? `dans ${hours}h ${remMin}min` : `dans ${hours}h`;
+}
+
 export function Loader() {
   return (
     <div className="space-y-6 animate-pulse">
@@ -28,15 +38,27 @@ export function ErrorState({ message, error }: { message?: string; error?: Error
   const isRateLimit = error instanceof RateLimitError || msg.includes("429") || msg.toLowerCase().includes("rate limit");
 
   if (isRateLimit) {
+    const retryAfter =
+      error instanceof RateLimitError ? error.retryAfterSeconds : null;
+    const countdown = retryAfter != null ? formatRetryDuration(retryAfter) : null;
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warning/10">
           <Clock className="h-6 w-6 text-warning" />
         </div>
         <div className="text-center">
-          <p className="text-[14px] font-medium text-foreground">Langfuse rate limit reached</p>
+          <p className="text-[14px] font-medium text-foreground">
+            Quota Langfuse épuisé
+          </p>
           <p className="mt-1.5 max-w-sm text-[13px] text-muted">
-            Your Langfuse plan has a daily limit on API calls. The data will refresh automatically when the limit resets. Try again in a few hours.
+            Le free tier de Langfuse Cloud limite à 100 appels API par jour.
+            {countdown ? (
+              <>
+                {" "}Données disponibles <strong className="text-foreground">{countdown}</strong>.
+              </>
+            ) : (
+              " Réessaie dans quelques heures."
+            )}
           </p>
         </div>
       </div>

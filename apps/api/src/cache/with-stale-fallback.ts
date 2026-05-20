@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import type { CacheStore } from "./store.js";
+import { LangfuseRateLimitError } from "../langfuse/client.js";
 
 interface ServeOptions {
   /** When true, skip the cache and fetch fresh. Triggered by `?force=true`
@@ -53,8 +54,15 @@ export async function serveOrStale<T>(
     return value;
   } catch (err) {
     const isRateLimit =
-      err instanceof Error && /rate[- ]?limit/i.test(err.message);
+      err instanceof LangfuseRateLimitError ||
+      (err instanceof Error && /rate[- ]?limit/i.test(err.message));
     if (!isRateLimit) throw err;
+
+    // Propagate the precise retry-after Langfuse gave us, so the frontend can
+    // render a countdown instead of a generic "rate limit reached" wall.
+    if (err instanceof LangfuseRateLimitError && err.retryAfterSeconds != null) {
+      c.header("X-Retry-After-Seconds", String(err.retryAfterSeconds));
+    }
 
     const stale = cache.getStale<T>(cacheKey);
     if (stale === undefined) throw err;

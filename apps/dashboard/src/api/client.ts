@@ -1,9 +1,11 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export class RateLimitError extends Error {
-  constructor() {
+  retryAfterSeconds: number | null;
+  constructor(retryAfterSeconds: number | null = null) {
     super("rate_limit");
     this.name = "RateLimitError";
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 
@@ -14,6 +16,9 @@ export interface ResponseMeta {
   cachedAt: number | null;
   /** True if the backend returned the previous (expired) value because Langfuse 429'd. */
   stale: boolean;
+  /** Seconds until Langfuse will accept fresh requests, parsed from its retry-after
+   * header. Lets the dashboard render a precise countdown next to the Refresh button. */
+  retryAfterSeconds: number | null;
 }
 
 type MetaListener = (meta: ResponseMeta, path: string) => void;
@@ -35,9 +40,12 @@ export async function fetchApi<T>(
   const separator = finalQuery ? "?" : "";
   const res = await fetch(`${API_BASE}${path}${separator}${finalQuery}`);
 
+  const retryAfterHeader = res.headers.get("X-Retry-After-Seconds");
+  const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+
   if (!res.ok) {
     if (res.status === 429) {
-      throw new RateLimitError();
+      throw new RateLimitError(Number.isFinite(retryAfterSeconds!) ? retryAfterSeconds : null);
     }
     await res.text();
     throw new Error(`Something went wrong (${res.status})`);
@@ -48,6 +56,7 @@ export async function fetchApi<T>(
   const meta: ResponseMeta = {
     cachedAt: cachedAtHeader ? Date.parse(cachedAtHeader) : null,
     stale: staleHeader === "true",
+    retryAfterSeconds: Number.isFinite(retryAfterSeconds!) ? retryAfterSeconds : null,
   };
   _listeners.forEach((l) => l(meta, path));
 
