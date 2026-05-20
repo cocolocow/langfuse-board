@@ -9,6 +9,15 @@ export class RateLimitError extends Error {
   }
 }
 
+/** Raised when the backend returns 204 — meaning the cache is cold and the
+ * board is in manual-fetch mode. The UI prompts the user to click Refresh. */
+export class NoDataYetError extends Error {
+  constructor() {
+    super("no_data");
+    this.name = "NoDataYetError";
+  }
+}
+
 /** Per-response metadata captured from API headers. Exposed via the singleton
  * `lastResponseMeta` so a header bar can show "last refreshed N min ago". */
 export interface ResponseMeta {
@@ -42,6 +51,11 @@ export async function fetchApi<T>(
 
   const retryAfterHeader = res.headers.get("X-Retry-After-Seconds");
   const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+
+  if (res.status === 204) {
+    // Manual-fetch mode + cold cache. Caller should render the empty-state.
+    throw new NoDataYetError();
+  }
 
   if (!res.ok) {
     if (res.status === 429) {

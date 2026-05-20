@@ -1,5 +1,5 @@
-import { AlertCircle, Clock } from "lucide-react";
-import { RateLimitError } from "../api/client.js";
+import { AlertCircle, Clock, RefreshCw } from "lucide-react";
+import { RateLimitError, NoDataYetError } from "../api/client.js";
 
 function formatRetryDuration(seconds: number): string {
   if (seconds <= 0) return "à l'instant";
@@ -36,6 +36,24 @@ export function Loader() {
 export function ErrorState({ message, error }: { message?: string; error?: Error | null }) {
   const msg = message ?? error?.message ?? "";
   const isRateLimit = error instanceof RateLimitError || msg.includes("429") || msg.toLowerCase().includes("rate limit");
+  const isNoData = error instanceof NoDataYetError;
+
+  if (isNoData) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-dim">
+          <RefreshCw className="h-6 w-6 text-accent" />
+        </div>
+        <div className="text-center">
+          <p className="text-[14px] font-medium text-foreground">Aucune donnée en cache</p>
+          <p className="mt-1.5 max-w-sm text-[13px] text-muted">
+            Le board ne tape Langfuse que lorsque tu cliques sur{" "}
+            <strong className="text-foreground">Rafraîchir</strong> en haut. Clique pour charger.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isRateLimit) {
     const retryAfter =

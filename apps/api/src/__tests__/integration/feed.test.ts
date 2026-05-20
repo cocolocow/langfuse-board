@@ -54,7 +54,7 @@ describe("GET /api/feed", () => {
   it("returns feed items with dimensions from config", async () => {
     const { app } = createFeedTestApp();
 
-    const res = await app.request("/api/feed");
+    const res = await app.request("/api/feed?force=true");
     expect(res.status).toBe(200);
 
     const body = await res.json() as any;
@@ -75,7 +75,7 @@ describe("GET /api/feed", () => {
   it("returns null for missing metadata dimensions", async () => {
     const { app } = createFeedTestApp();
 
-    const res = await app.request("/api/feed");
+    const res = await app.request("/api/feed?force=true");
     const body = await res.json() as any;
 
     const second = body.items[1];
@@ -86,7 +86,7 @@ describe("GET /api/feed", () => {
   it("detects error status from observations", async () => {
     const { app } = createFeedTestApp();
 
-    const res = await app.request("/api/feed");
+    const res = await app.request("/api/feed?force=true");
     const body = await res.json() as any;
 
     expect(body.items[1].status).toBe("error");
@@ -95,7 +95,7 @@ describe("GET /api/feed", () => {
   it("respects limit parameter", async () => {
     const { app } = createFeedTestApp();
 
-    const res = await app.request("/api/feed?limit=1");
+    const res = await app.request("/api/feed?limit=1&force=true");
     const body = await res.json() as any;
 
     expect(body.items).toHaveLength(1);
@@ -105,7 +105,7 @@ describe("GET /api/feed", () => {
     const emptyConfig: BoardConfig = { name: "Empty", dimensions: [] };
     const { app } = createFeedTestApp(emptyConfig);
 
-    const res = await app.request("/api/feed");
+    const res = await app.request("/api/feed?force=true");
     const body = await res.json() as any;
 
     expect(body.items[0].dimensions).toEqual({});

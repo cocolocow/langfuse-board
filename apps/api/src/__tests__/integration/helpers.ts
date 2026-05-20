@@ -38,7 +38,7 @@ export function createTestApp(
   return { app, cache, langfuse };
 }
 
-export const defaultQuery = "?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z";
+export const defaultQuery = "?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z&force=true";
 
 export function queryKey(query: LangfuseMetricsQuery): string {
   const dims = query.dimensions?.map((d) => d.field).join(",") ?? "none";

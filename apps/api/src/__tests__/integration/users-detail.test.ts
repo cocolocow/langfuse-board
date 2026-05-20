@@ -4,7 +4,7 @@ import { createApp } from "../../app.js";
 import { DEFAULT_CONFIG } from "../../config/board.js";
 import type { ILangfuseClient } from "../../langfuse/client.js";
 
-const q = "?from=2026-05-01T00:00:00Z&to=2026-05-31T23:59:59Z";
+const q = "?from=2026-05-01T00:00:00Z&to=2026-05-31T23:59:59Z&force=true";
 
 function makeApp() {
   const langfuse = {

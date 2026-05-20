@@ -95,7 +95,7 @@ describe("GET /api/config/diagnostic", () => {
     };
     const app = createConfigTestApp(config);
 
-    const res = await app.request("/api/config/diagnostic");
+    const res = await app.request("/api/config/diagnostic?force=true");
     expect(res.status).toBe(200);
 
     const body = await res.json() as any;

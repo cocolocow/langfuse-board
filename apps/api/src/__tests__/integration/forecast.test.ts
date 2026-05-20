@@ -25,7 +25,7 @@ function makeApp() {
 describe("GET /api/forecast", () => {
   it("projects cost and traces over the next 30 days", async () => {
     const app = makeApp();
-    const res = await app.request("/api/forecast?days=30");
+    const res = await app.request("/api/forecast?days=30&force=true");
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
     expect(body.days).toBe(30);

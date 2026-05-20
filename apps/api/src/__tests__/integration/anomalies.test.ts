@@ -38,7 +38,7 @@ function makeApp() {
 describe("GET /api/anomalies", () => {
   it("flags the spike day", async () => {
     const app = makeApp();
-    const res = await app.request("/api/anomalies?lookbackDays=14&zThreshold=2");
+    const res = await app.request("/api/anomalies?lookbackDays=14&zThreshold=2&force=true");
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
     expect(body.items.length).toBeGreaterThan(0);

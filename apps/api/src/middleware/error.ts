@@ -1,7 +1,14 @@
 import type { ErrorHandler } from "hono";
 import { LangfuseRateLimitError } from "../langfuse/client.js";
+import { NoDataAvailableError } from "../cache/with-stale-fallback.js";
 
 export const errorHandler: ErrorHandler = (err, c) => {
+  if (err instanceof NoDataAvailableError) {
+    // Cold-cache state in manual mode. Not an error — the frontend interprets
+    // 204 as "show the empty-state hint, prompt the user to click Refresh".
+    return c.body(null, 204);
+  }
+
   console.error(`[error] ${err.message}`);
 
   if (err instanceof LangfuseRateLimitError) {

@@ -59,7 +59,7 @@ function createBreakdownTestApp() {
   return createApp({ langfuse, cache, boardConfig: testConfig });
 }
 
-const dateParams = "&from=2024-01-14T00:00:00Z&to=2024-01-16T00:00:00Z";
+const dateParams = "&from=2024-01-14T00:00:00Z&to=2024-01-16T00:00:00Z&force=true";
 
 describe("GET /api/breakdown", () => {
   it("returns breakdown by trace field (userId)", async () => {

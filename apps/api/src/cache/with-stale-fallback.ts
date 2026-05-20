@@ -2,6 +2,16 @@ import type { Context } from "hono";
 import type { CacheStore } from "./store.js";
 import { LangfuseRateLimitError } from "../langfuse/client.js";
 
+/** Raised when manual-fetch mode hits a cold cache. The board renders an
+ * "aucune donnée — cliquer Rafraîchir" placeholder instead of silently
+ * triggering a Langfuse call the user didn't ask for. */
+export class NoDataAvailableError extends Error {
+  constructor() {
+    super("No cached data available — manual refresh required");
+    this.name = "NoDataAvailableError";
+  }
+}
+
 interface ServeOptions {
   /** When true, skip the cache and fetch fresh. Triggered by `?force=true`
    * on the query string. Stale fallback still applies if Langfuse 429s. */
@@ -9,21 +19,22 @@ interface ServeOptions {
 }
 
 /**
- * Stale-while-error helper for Langfuse-backed routes.
+ * Manual-fetch-with-stale-fallback helper for Langfuse-backed routes.
+ *
+ * Philosophy: the user owns when Langfuse gets hit. The board itself never
+ * silently fetches — page loads serve whatever the cache has (fresh OR stale,
+ * doesn't matter), and only the explicit Rafraîchir button passes `force=true`
+ * which is the sole trigger of an actual outbound call.
  *
  * Behavior:
- *   1. Return cached fresh value if present (unless `force`).
- *   2. Otherwise run `fetcher` to compute a new value.
- *      - On success: cache the value with `ttlMs` and return it.
- *      - On Langfuse 429 (or any error message containing "Rate limited"):
- *        fall back to the last known value (even if expired), tag the response
- *        with `X-Stale: true`, and return 200. The dashboard keeps showing the
- *        previous numbers instead of an empty "rate limit reached" screen.
- *      - If no stale value exists either, rethrow so the global error handler
- *        produces the usual 429 response.
+ *   - Default (no force): return whatever the cache has. Fresh first, stale
+ *     fallback if expired. If nothing at all → throw NoDataAvailableError →
+ *     the frontend shows a "click Rafraîchir to load" empty state.
+ *   - force=true: bypass cache, fetch fresh from Langfuse, cache the result.
+ *     If Langfuse 429s, fall back to stale (with retry-after countdown header).
  *
- * Always sets `X-Cached-At` (ISO timestamp) on the response so the frontend
- * can show "last refreshed N min ago" next to the manual refresh button.
+ * Always sets `X-Cached-At` (ISO timestamp) and `X-Stale` when relevant so the
+ * frontend can show "données du HH:MM" next to the refresh button.
  */
 export async function serveOrStale<T>(
   c: Context,
@@ -40,13 +51,23 @@ export async function serveOrStale<T>(
   };
 
   if (!options.force) {
+    // Manual mode: never call Langfuse. Serve fresh, fall back to stale, fail
+    // with NoDataAvailableError if both are empty.
     const fresh = cache.get<T>(cacheKey);
     if (fresh !== undefined) {
       setCachedAtHeader(cache.getCachedAt(cacheKey));
       return fresh;
     }
+    const stale = cache.getStale<T>(cacheKey);
+    if (stale !== undefined) {
+      c.header("X-Stale", "true");
+      setCachedAtHeader(cache.getCachedAt(cacheKey));
+      return stale;
+    }
+    throw new NoDataAvailableError();
   }
 
+  // force=true: explicit user-driven refresh — fetch from Langfuse.
   try {
     const value = await fetcher();
     cache.set(cacheKey, value, ttlMs);

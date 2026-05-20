@@ -35,7 +35,7 @@ function createUsageTestApp() {
   return createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG });
 }
 
-const q = "?from=2024-01-15T00:00:00Z&to=2024-01-15T23:59:59Z";
+const q = "?from=2024-01-15T00:00:00Z&to=2024-01-15T23:59:59Z&force=true";
 
 describe("GET /api/usage", () => {
   it("returns usage data from daily API with top users from traces", async () => {

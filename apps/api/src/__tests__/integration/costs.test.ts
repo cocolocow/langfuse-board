@@ -29,7 +29,7 @@ function createCostsTestApp() {
   return createApp({ langfuse, cache, boardConfig: DEFAULT_CONFIG });
 }
 
-const q = "?from=2024-01-15T00:00:00Z&to=2024-01-15T23:59:59Z";
+const q = "?from=2024-01-15T00:00:00Z&to=2024-01-15T23:59:59Z&force=true";
 
 describe("GET /api/costs", () => {
   it("returns cost breakdown from daily API", async () => {
