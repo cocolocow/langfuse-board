@@ -41,6 +41,7 @@ export type {
   TimeseriesResponse,
   AnomaliesResponse,
   ForecastResponse,
+  QuotaStatusResponse,
 } from "./types/api.js";
 
 export type {

@@ -9,3 +9,4 @@ playwright-report
 test-results
 .DS_Store
 .langfuse-board-cache.json
+.langfuse-quota-tracker.json

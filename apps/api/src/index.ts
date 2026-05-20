@@ -5,6 +5,7 @@ import { loadBoardConfig } from "./config/board.js";
 import { LangfuseClient } from "./langfuse/client.js";
 import { createMockLangfuseClient } from "./langfuse/mock.js";
 import { InMemoryCache } from "./cache/memory.js";
+import { QuotaTracker, setQuotaTracker } from "./quota/tracker.js";
 import { createApp } from "./app.js";
 
 const config = loadConfig();
@@ -24,6 +25,14 @@ const cache = new InMemoryCache({
   // the last known snapshot to display via the stale fallback.
   persistTo: process.env.CACHE_FILE ?? resolve(import.meta.dirname, "../../../.langfuse-board-cache.json"),
 });
+
+// Track Langfuse API calls in a 24h rolling window so the header can show
+// "X/100 appels utilisés" — survives restarts via JSON on disk.
+const quotaTracker = new QuotaTracker({
+  persistTo: process.env.QUOTA_FILE ?? resolve(import.meta.dirname, "../../../.langfuse-quota-tracker.json"),
+});
+setQuotaTracker(quotaTracker);
+
 const app = createApp({ langfuse, cache, boardConfig });
 
 const mode = config.LANGFUSE_MOCK ? " (mock data)" : "";

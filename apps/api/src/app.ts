@@ -19,6 +19,7 @@ import { createPersonasRoutes } from "./routes/personas.js";
 import { createTimeseriesRoutes } from "./routes/timeseries.js";
 import { createAnomaliesRoutes } from "./routes/anomalies.js";
 import { createForecastRoutes } from "./routes/forecast.js";
+import { createQuotaStatusRoutes } from "./routes/quota-status.js";
 
 interface AppDeps {
   langfuse: ILangfuseClient;
@@ -46,6 +47,7 @@ export function createApp({ langfuse, cache, boardConfig }: AppDeps) {
   app.route("/api/timeseries", createTimeseriesRoutes(langfuse, cache));
   app.route("/api/anomalies", createAnomaliesRoutes(langfuse, cache));
   app.route("/api/forecast", createForecastRoutes(langfuse, cache));
+  app.route("/api/quota-status", createQuotaStatusRoutes());
   app.route("/api/health", createHealthRoutes(langfuse, cache));
 
   return app;

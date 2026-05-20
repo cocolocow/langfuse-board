@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useDateRange, PRESETS } from "../../hooks/use-date-range.js";
 import { useFreshness } from "../../hooks/use-freshness.js";
-import { Calendar, RefreshCw } from "lucide-react";
+import { useQuotaStatus } from "../../hooks/use-dashboard-data.js";
+import { Calendar, RefreshCw, Activity } from "lucide-react";
 
 function formatRelative(epochMs: number | null): string {
   if (!epochMs) return "";
@@ -33,6 +34,7 @@ function formatCountdown(retryAt: number | null): string {
 export function Header() {
   const { range, setRange } = useDateRange();
   const { meta, refresh } = useFreshness();
+  const quota = useQuotaStatus();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Tick every 15s so "il y a Xmin" / countdown stay accurate without React Query churn
@@ -57,6 +59,15 @@ export function Header() {
   const cachedAt = meta?.cachedAt ?? null;
   const stale = meta?.stale ?? false;
 
+  const quotaUsed = quota.data?.usedLast24h ?? 0;
+  const quotaLimit = quota.data?.dailyLimit ?? 100;
+  const quotaPct = quotaLimit > 0 ? quotaUsed / quotaLimit : 0;
+  // Soft "approaching" at 80%, "critical" at 95%
+  const quotaColor =
+    quotaPct >= 0.95 ? "text-negative" :
+    quotaPct >= 0.8 ? "text-amber-400" :
+    "text-muted";
+
   return (
     <header className="flex items-center justify-between border-b border-border bg-surface/50 px-6 py-2.5 backdrop-blur-xl">
       <div className="flex items-center gap-3 text-[11px] text-muted">
@@ -69,6 +80,16 @@ export function Header() {
         {isRateLimited && (
           <span className="text-amber-400" title="Quota free Langfuse Cloud (100 req/jour) épuisé">
             Quota épuisé · re-dispo {formatCountdown(retryAt)}
+          </span>
+        )}
+        {quota.data && !isRateLimited && (
+          <span
+            className={`flex items-center gap-1 ${quotaColor}`}
+            title={`Compteur local des appels Langfuse depuis le board sur les 24 dernières heures. Estimation — Langfuse n'expose pas de header officiel.`}
+          >
+            <Activity className="h-3 w-3" />
+            <span className="font-mono">{quotaUsed}/{quotaLimit}</span>
+            <span>appels (24h)</span>
           </span>
         )}
         <button

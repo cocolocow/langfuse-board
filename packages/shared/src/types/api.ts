@@ -105,3 +105,14 @@ export interface ForecastResponse extends ForecastResult {
   /** Days the forecast was computed for (echoes the query param). */
   days: number;
 }
+
+/** Local estimate of how many Langfuse API calls we've burned in the last 24h.
+ * Langfuse Cloud doesn't expose a RateLimit-Remaining header on 200s, so the
+ * board counts its own outbound calls. The percentage is a rough planner —
+ * it ignores other clients hitting the same project. */
+export interface QuotaStatusResponse {
+  usedLast24h: number;
+  dailyLimit: number;
+  /** Epoch ms of the oldest call inside the window. Useful for ETA. */
+  oldestCallAt: number | null;
+}

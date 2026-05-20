@@ -2,6 +2,7 @@ import type {
   LangfuseMetricsQuery,
   LangfuseMetricsResponse,
 } from "@langfuse-board/shared";
+import { recordLangfuseCall } from "../quota/tracker.js";
 
 /** Thrown when Langfuse returns 429. Carries the retry-after value (in seconds)
  * from the response header so the frontend can show a precise countdown to the
@@ -112,6 +113,7 @@ export class LangfuseClient implements ILangfuseClient {
       );
     }
 
+    recordLangfuseCall();
     return response.json() as Promise<LangfuseMetricsResponse>;
   }
 
@@ -142,6 +144,7 @@ export class LangfuseClient implements ILangfuseClient {
       throw new Error(`Langfuse API error ${response.status}: ${body}`);
     }
 
+    recordLangfuseCall();
     return response.json() as Promise<LangfuseDailyResponse>;
   }
 
@@ -167,6 +170,7 @@ export class LangfuseClient implements ILangfuseClient {
       throw new Error(`Langfuse API error ${response.status}: ${body}`);
     }
 
+    recordLangfuseCall();
     return response.json() as Promise<LangfuseTracesResponse>;
   }
 

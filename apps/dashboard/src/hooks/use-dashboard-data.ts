@@ -14,6 +14,7 @@ import type {
   TimeseriesResponse,
   AnomaliesResponse,
   ForecastResponse,
+  QuotaStatusResponse,
 } from "@langfuse-board/shared";
 
 export function useOverview() {
@@ -128,5 +129,15 @@ export function useForecast(days = 30) {
     queryKey: ["forecast", days],
     queryFn: () =>
       fetchApi<ForecastResponse>("/api/forecast", `days=${days}`, { force: shouldForce() }),
+  });
+}
+
+/** Tracks how many Langfuse API calls the board has burned in the trailing 24h.
+ * Polled every 30s so the indicator stays roughly accurate without spam. */
+export function useQuotaStatus() {
+  return useQuery({
+    queryKey: ["quota-status"],
+    queryFn: () => fetchApi<QuotaStatusResponse>("/api/quota-status", ""),
+    refetchInterval: 30_000,
   });
 }
