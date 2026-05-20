@@ -59,14 +59,13 @@ export function Header() {
   const cachedAt = meta?.cachedAt ?? null;
   const stale = meta?.stale ?? false;
 
+  // The tracker counts ONLY this board's outbound calls — not ingestion from
+  // ECS, nor other clients hitting the same Langfuse project. So we don't show
+  // an "X/100" denominator (misleading: when rate-limited, the real number is
+  // 100/100 even if the board's own counter is at 4). Just the raw count, with
+  // colors triggered by whether we're CURRENTLY rate-limited (authoritative
+  // signal from Langfuse), not by our local estimate.
   const quotaUsed = quota.data?.usedLast24h ?? 0;
-  const quotaLimit = quota.data?.dailyLimit ?? 100;
-  const quotaPct = quotaLimit > 0 ? quotaUsed / quotaLimit : 0;
-  // Soft "approaching" at 80%, "critical" at 95%
-  const quotaColor =
-    quotaPct >= 0.95 ? "text-negative" :
-    quotaPct >= 0.8 ? "text-amber-400" :
-    "text-muted";
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-surface/50 px-6 py-2.5 backdrop-blur-xl">
@@ -82,14 +81,17 @@ export function Header() {
             Quota épuisé · re-dispo {formatCountdown(retryAt)}
           </span>
         )}
-        {quota.data && !isRateLimited && (
+        {quota.data && (
           <span
-            className={`flex items-center gap-1 ${quotaColor}`}
-            title={`Compteur local des appels Langfuse depuis le board sur les 24 dernières heures. Estimation — Langfuse n'expose pas de header officiel.`}
+            className="flex items-center gap-1 text-muted"
+            title={
+              "Nombre de requêtes que CE board a envoyées à Langfuse sur les 24 dernières heures.\n\n" +
+              "Ce compteur ne reflète PAS le quota global Langfuse — l'ingestion de traces depuis ton ECS Dualis et d'autres clients consomment aussi le quota mais ne sont pas comptés ici."
+            }
           >
             <Activity className="h-3 w-3" />
-            <span className="font-mono">{quotaUsed}/{quotaLimit}</span>
-            <span>appels (24h)</span>
+            <span className="font-mono">{quotaUsed}</span>
+            <span>appels du board (24h)</span>
           </span>
         )}
         <button
