@@ -1,12 +1,65 @@
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, DollarSign, Users, Activity, Radio, Settings, Zap } from "lucide-react";
+import {
+  LayoutDashboard,
+  DollarSign,
+  TrendingUp,
+  Activity,
+  Radio,
+  Settings,
+  Zap,
+  User,
+  Building2,
+  Sparkles,
+  Wand2,
+} from "lucide-react";
 
-const navItems = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/costs", label: "Costs", icon: DollarSign },
-  { href: "/usage", label: "Usage", icon: Users },
-  { href: "/quality", label: "Performance", icon: Activity },
-  { href: "/live", label: "Live", icon: Radio },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  liveDot?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const sections: NavSection[] = [
+  {
+    title: "Vue d'ensemble",
+    items: [
+      { href: "/", label: "Overview", icon: LayoutDashboard },
+      { href: "/costs", label: "Coûts", icon: DollarSign },
+    ],
+  },
+  {
+    title: "Acteurs",
+    items: [
+      { href: "/users", label: "Users", icon: User },
+      { href: "/workspaces", label: "Workspaces", icon: Building2 },
+      { href: "/personas", label: "Personas", icon: Wand2 },
+    ],
+  },
+  {
+    title: "Contenu",
+    items: [
+      { href: "/features", label: "Features", icon: Sparkles },
+    ],
+  },
+  {
+    title: "Tendances",
+    items: [
+      { href: "/trends", label: "Trends", icon: TrendingUp },
+    ],
+  },
+  {
+    title: "Qualité",
+    items: [
+      { href: "/quality", label: "Performance", icon: Activity },
+      { href: "/live", label: "Live", icon: Radio, liveDot: true },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -23,39 +76,49 @@ export function Sidebar() {
         </span>
       </div>
 
-      <nav className="flex-1 px-3 pt-1">
-        <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-widest text-muted">
-          Dashboard
-        </p>
-        <ul className="space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = location === href;
-            return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={`group relative flex items-center gap-3 rounded-lg px-3 py-[7px] text-[13px] font-medium transition-all duration-200 ${
-                    isActive
-                      ? "bg-accent-dim text-accent-light"
-                      : "text-muted hover:bg-surface-hover hover:text-foreground-secondary"
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />
-                  )}
-                  <Icon className={`h-4 w-4 transition-colors ${isActive ? "text-accent" : "text-muted group-hover:text-foreground-secondary"}`} />
-                  {label}
-                  {label === "Live" && (
-                    <span className="ml-auto flex h-2 w-2">
-                      <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-positive opacity-60" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-positive" />
-                    </span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      <nav className="flex-1 overflow-y-auto px-3 pt-1">
+        {sections.map((section, sIdx) => (
+          <div key={section.title} className={sIdx > 0 ? "mt-4" : ""}>
+            <p className="mb-2 px-3 text-[10px] font-medium uppercase tracking-widest text-muted">
+              {section.title}
+            </p>
+            <ul className="space-y-0.5">
+              {section.items.map(({ href, label, icon: Icon, liveDot }) => {
+                const isActive = location === href;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={`group relative flex items-center gap-3 rounded-lg px-3 py-[7px] text-[13px] font-medium transition-all duration-200 ${
+                        isActive
+                          ? "bg-accent-dim text-accent-light"
+                          : "text-muted hover:bg-surface-hover hover:text-foreground-secondary"
+                      }`}
+                    >
+                      {isActive && (
+                        <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />
+                      )}
+                      <Icon
+                        className={`h-4 w-4 transition-colors ${
+                          isActive
+                            ? "text-accent"
+                            : "text-muted group-hover:text-foreground-secondary"
+                        }`}
+                      />
+                      {label}
+                      {liveDot && (
+                        <span className="ml-auto flex h-2 w-2">
+                          <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-positive opacity-60" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-positive" />
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
 
         <div className="my-4 border-t border-border-subtle" />
 
@@ -69,7 +132,13 @@ export function Sidebar() {
                   : "text-muted hover:bg-surface-hover hover:text-foreground-secondary"
               }`}
             >
-              <Settings className={`h-4 w-4 transition-colors ${location === "/settings" ? "text-accent" : "text-muted group-hover:text-foreground-secondary"}`} />
+              <Settings
+                className={`h-4 w-4 transition-colors ${
+                  location === "/settings"
+                    ? "text-accent"
+                    : "text-muted group-hover:text-foreground-secondary"
+                }`}
+              />
               Settings
             </Link>
           </li>

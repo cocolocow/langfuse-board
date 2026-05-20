@@ -13,6 +13,12 @@ import { createHealthRoutes } from "./routes/health.js";
 import { createFeedRoutes } from "./routes/feed.js";
 import { createConfigRoutes } from "./routes/config.js";
 import { createBreakdownRoutes } from "./routes/breakdown.js";
+import { createFeaturesRoutes } from "./routes/features.js";
+import { createUsersDetailRoutes } from "./routes/users-detail.js";
+import { createPersonasRoutes } from "./routes/personas.js";
+import { createTimeseriesRoutes } from "./routes/timeseries.js";
+import { createAnomaliesRoutes } from "./routes/anomalies.js";
+import { createForecastRoutes } from "./routes/forecast.js";
 
 interface AppDeps {
   langfuse: ILangfuseClient;
@@ -34,6 +40,12 @@ export function createApp({ langfuse, cache, boardConfig }: AppDeps) {
   app.route("/api/feed", createFeedRoutes(langfuse, cache, boardConfig));
   app.route("/api/config", createConfigRoutes(langfuse, boardConfig, cache));
   app.route("/api/breakdown", createBreakdownRoutes(langfuse, cache, boardConfig));
+  app.route("/api/features", createFeaturesRoutes(langfuse, cache));
+  app.route("/api/users-detail", createUsersDetailRoutes(langfuse, cache));
+  app.route("/api/personas", createPersonasRoutes(langfuse, cache));
+  app.route("/api/timeseries", createTimeseriesRoutes(langfuse, cache));
+  app.route("/api/anomalies", createAnomaliesRoutes(langfuse, cache));
+  app.route("/api/forecast", createForecastRoutes(langfuse, cache));
   app.route("/api/health", createHealthRoutes(langfuse, cache));
 
   return app;

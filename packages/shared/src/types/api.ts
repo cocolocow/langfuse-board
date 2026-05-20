@@ -6,6 +6,11 @@ import type {
   TopUser,
   TopModel,
   ScoreSummary,
+  FeatureRow,
+  UserDetail,
+  PersonaRow,
+  AnomalyEvent,
+  ForecastResult,
 } from "./dashboard.js";
 
 export interface DateRangeQuery {
@@ -71,4 +76,32 @@ export interface HealthResponse {
   status: "ok" | "error";
   langfuse: boolean;
   cacheSize: number;
+}
+
+export interface FeaturesResponse {
+  items: FeatureRow[];
+  totalCost: number;
+}
+
+export interface UsersDetailResponse {
+  items: UserDetail[];
+}
+
+export interface PersonasResponse {
+  items: PersonaRow[];
+}
+
+export interface TimeseriesResponse {
+  metric: "cost" | "tokens" | "traces";
+  groupBy: "model" | "user" | "feature" | "persona" | "none";
+  series: { label: string; points: TimeseriesPoint[] }[];
+}
+
+export interface AnomaliesResponse {
+  items: AnomalyEvent[];
+}
+
+export interface ForecastResponse extends ForecastResult {
+  /** Days the forecast was computed for (echoes the query param). */
+  days: number;
 }

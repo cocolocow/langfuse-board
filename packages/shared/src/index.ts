@@ -18,6 +18,12 @@ export type {
   TopUser,
   TopModel,
   ScoreSummary,
+  FeatureRow,
+  UserDetail,
+  PersonaRow,
+  AnomalyEvent,
+  ForecastResult,
+  WeeklyCompare,
 } from "./types/dashboard.js";
 
 export type {
@@ -29,6 +35,12 @@ export type {
   FeedItem,
   FeedResponse,
   HealthResponse,
+  FeaturesResponse,
+  UsersDetailResponse,
+  PersonasResponse,
+  TimeseriesResponse,
+  AnomaliesResponse,
+  ForecastResponse,
 } from "./types/api.js";
 
 export type {
@@ -66,6 +78,24 @@ export {
 export {
   formatTimeAgo,
 } from "./transformers/time.js";
+
+export {
+  projectFromTimeseries,
+} from "./transformers/forecast.js";
+
+export {
+  detectAnomalies,
+} from "./transformers/anomaly.js";
+
+export {
+  compareWeekOverWeek,
+} from "./transformers/weekly.js";
+
+export {
+  groupByMulti,
+  type CellValue,
+  type Matrix,
+} from "./transformers/multidim.js";
 
 // Validators
 export {
